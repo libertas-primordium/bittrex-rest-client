@@ -26,8 +26,26 @@ class BittrexClient {
    *-------------------------------------------------------------------------*/
 
   /**
-   * @method markets
-   * @return {Promise}
+   * @method markets - List all available markets. Returns an array.
+   * @return {Promise} - [{
+      "symbol": "string",
+      "baseCurrencySymbol": "string",
+      "quoteCurrencySymbol": "string",
+      "minTradeSize": "number (double)",
+      "precision": "integer (int32)",
+      "status": "string",
+      "createdAt": "string (date-time)",
+      "notice": "string",
+      "prohibitedIn": [
+        "string"
+      ],
+      "associatedTermsOfService": [
+        "string"
+      ],
+      "tags": [
+        "string"
+      ]
+    }]
    */
   async markets() {
     const results = await this.request('get', '/markets')
@@ -35,27 +53,59 @@ class BittrexClient {
   }
 
   /**
-   * @method currencies
-   * @return {Promise}
+   * @method currencies - List all available currencies. Returns an array.
+   * @return {Promise} - [{
+      "symbol": "string",
+      "name": "string",
+      "coinType": "string",
+      "status": "string",
+      "minConfirmations": "integer (int32)",
+      "notice": "string",
+      "txFee": "number (double)",
+      "logoUrl": "string",
+      "prohibitedIn": [
+        "string"
+      ],
+      "baseAddress": "string",
+      "associatedTermsOfService": [
+        "string"
+      ],
+      "tags": [
+        "string"
+      ]
+    }]
    */
   async currencies() {
     return this.request('get', '/currencies')
   }
 
   /**
-   * @method ticker
-   * @param {String} market
-   * @return {Promise}
+   * @method ticker - Get current ticker quote (bid/ask/last price). Returns a single object if {market} param included, or array of all available markets if no {market} specified.
+   * @param {String} market - Optional. Example: 'BTC-USD'
+   * @return {Promise} - {
+      "symbol": "string",
+      "lastTradeRate": "number (double)",
+      "bidRate": "number (double)",
+      "askRate": "number (double)"
+    }
    */
   async ticker(market) {
-    let symbol = ''
-    if (market) symbol = `/${market}`
-    return this.request('get', `/markets${symbol}/tickers`)
+    if (market) return this.request('get', `/markets/${market}/ticker`)
+    else return this.request('get', '/markets/tickers')
   }
 
   /**
-   * @method marketSummaries
-   * @return {Promise}
+   * @method marketSummaries - List 24 summaries for all available markets. Returns an array.
+   * @return {Promise} - [
+    {
+      "symbol": "string",
+      "high": "number (double)",
+      "low": "number (double)",
+      "volume": "number (double)",
+      "quoteVolume": "number (double)",
+      "percentChange": "number (double)",
+      "updatedAt": "string (date-time)"
+  }]
    */
   async marketSummaries() {
     const results = await this.request('get', '/markets/summaries')
@@ -63,9 +113,17 @@ class BittrexClient {
   }
 
   /**
-   * @method marketSummary
-   * @param {String} market
-   * @return {Promise}
+   * @method marketSummary - Get 24 hour summary for specified market. Returns a single object.
+   * @param {String} market - Required. Example: 'BTC-USD'
+   * @return {Promise} - {
+      "symbol": "string",
+      "high": "number (double)",
+      "low": "number (double)",
+      "volume": "number (double)",
+      "quoteVolume": "number (double)",
+      "percentChange": "number (double)",
+      "updatedAt": "string (date-time)"
+    }
    */
   async marketSummary(market) {
     if (!market) throw new Error('market is required')
@@ -74,9 +132,16 @@ class BittrexClient {
   }
 
   /**
-   * @method marketHistory
-   * @param {String} market
-   * @return {Promise}
+   * @method marketHistory - Get list of most recently executed trades for specified market. Returns an array.
+   * @param {String} market - Reqired. Example: 'BTC-USD'
+   * @return {Promise} - [
+    {
+      "id": "string (uuid)",
+      "executedAt": "string (date-time)",
+      "quantity": "number (double)",
+      "rate": "number (double)",
+      "takerSide": "string"
+    }]
    */
   async marketHistory(market) {
     if (!market) throw new Error('market is required')
@@ -85,10 +150,23 @@ class BittrexClient {
   }
 
   /**
-   * @method orderBook
-   * @param {String} market
-   * @param {Number} depth - optional, default return 25 if not included
-   * @return {Promise}
+   * @method orderBook - Get orderbook for specified market. 25 levels deep if no depth specified. Returns an object containing 2 arrays, one for each side of the orderbook.
+   * @param {String} market - Required. Example: 'BTC-USD'
+   * @param {Number} depth - optional, default depth is 25 if this param is not included.
+   * @return {Promise} - {
+    "bid": [
+      {
+        "quantity": "number (double)",
+        "rate": "number (double)"
+      }
+    ],
+    "ask": [
+      {
+        "quantity": "number (double)",
+        "rate": "number (double)"
+      }
+    ]
+  }
    */
   async orderBook(market, depth) {
     if (!market) throw new Error('market is required')
