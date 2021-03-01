@@ -16,13 +16,13 @@ class BittrexClient {
     this._apiSecret = apiSecret
     this._nonce = Date.now()
     this._client = axios.create({
-      baseURL: 'https://bittrex.com/api/v1.1',
+      baseURL: 'https://api.bittrex.com/v3',
       httpsAgent: new https.Agent({ keepAlive })
     })
   }
 
   /*-------------------------------------------------------------------------*
-   * Public
+   * Non-Authenticated API Calls
    *-------------------------------------------------------------------------*/
 
   /**
@@ -30,7 +30,7 @@ class BittrexClient {
    * @return {Promise}
    */
   async markets() {
-    const results = await this.request('get', '/public/getmarkets')
+    const results = await this.request('get', '/markets')
     return this.parseDates(results, ['Created'])
   }
 
@@ -39,7 +39,7 @@ class BittrexClient {
    * @return {Promise}
    */
   async currencies() {
-    return this.request('get', '/public/getcurrencies')
+    return this.request('get', '/currencies')
   }
 
   /**
@@ -48,9 +48,9 @@ class BittrexClient {
    * @return {Promise}
    */
   async ticker(market) {
-    if (!market) throw new Error('market is required')
-    const params = { market }
-    return this.request('get', '/public/getticker', { params })
+    let symbol = ''
+    if (market) symbol = `/${market}`
+    return this.request('get', `/markets${symbol}/tickers`)
   }
 
   /**
@@ -58,7 +58,7 @@ class BittrexClient {
    * @return {Promise}
    */
   async marketSummaries() {
-    const results = await this.request('get', '/public/getmarketsummaries')
+    const results = await this.request('get', '/markets/summaries')
     return this.parseDates(results, ['TimeStamp', 'Created'])
   }
 
@@ -69,8 +69,7 @@ class BittrexClient {
    */
   async marketSummary(market) {
     if (!market) throw new Error('market is required')
-    const params = { market }
-    const results = await this.request('get', '/public/getmarketsummary', { params })
+    const results = await this.request('get', `/markets/${market}/summary`)
     return this.parseDates(results, ['TimeStamp', 'Created'])
   }
 
@@ -81,28 +80,26 @@ class BittrexClient {
    */
   async marketHistory(market) {
     if (!market) throw new Error('market is required')
-    const params = { market }
-    const results = await this.request('get', '/public/getmarkethistory', { params })
+    const results = await this.request('get', `/markets/${market}/trades`)
     return this.parseDates(results, ['TimeStamp'])
   }
 
   /**
    * @method orderBook
    * @param {String} market
-   * @param {String} type
+   * @param {Number} depth - optional, default return 25 if not included
    * @return {Promise}
    */
-  async orderBook(market, { type = 'both' } = {}) {
+  async orderBook(market, depth) {
     if (!market) throw new Error('market is required')
-    if (!type) throw new Error('options.type is required')
-    const params = { market, type }
-    return this.request('get', '/public/getorderbook', { params })
+    if (!depth) throw new Error('options.depth is required')
+    return this.request('get', `/markets/${market}/orderbook`, { depth })
   }
 
   /*-------------------------------------------------------------------------*
-   * Market
+   * Authenticated API Calls
    *-------------------------------------------------------------------------*/
-
+  // Trading:
   /**
    * @method buyLimit
    * @param {String} market
@@ -168,9 +165,7 @@ class BittrexClient {
     return this.parseDates(results, ['Opened'])
   }
 
-  /*-------------------------------------------------------------------------*
-   * Account
-   *-------------------------------------------------------------------------*/
+  // User/Account:
 
   /**
    * @method balances
