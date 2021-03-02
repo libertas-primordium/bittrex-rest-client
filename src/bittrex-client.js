@@ -183,9 +183,9 @@ class BittrexClient {
    * @param  {String} market - Required. Example: 'BTC-USD'
    * @param  {String} direction - Required. ['BUY'|'SELL']
    * @param  {String} type - Required. ['LIMIT'|'MARKET'|'CEILING_LIMIT'|'CEILING_MARKET']
-   * @param  {Number} quantity=null - Required if type=['LIMIT'|'MARKET']. Excluded if type=['CEILING_LIMIT'|'CEILING_MARKET'].
-   * @param  {Number} ceiling=null - Required if type=['CEILING_LIMIT'|'CEILING_MARKET']. Excluded if type=['LIMIT'|'MARKET'].
-   * @param  {Number} limit=null - Order price. Required if type=['LIMIT'|'CEILING_LIMIT']. Excluded if type=['MARKET'|'CEILING_MARKET']
+   * @param  {Number} quantity - Required if type=['LIMIT'|'MARKET']. Excluded if type=['CEILING_LIMIT'|'CEILING_MARKET'].
+   * @param  {Number} ceiling - Required if type=['CEILING_LIMIT'|'CEILING_MARKET']. Excluded if type=['LIMIT'|'MARKET'].
+   * @param  {Number} limit - Order price. Required if type=['LIMIT'|'CEILING_LIMIT']. Excluded if type=['MARKET'|'CEILING_MARKET']
    * @param  {String} timeInForce='GOOD_TIL_CANCELLED' - Required. ['GOOD_TIL_CANCELLED'|'IMMEDIATE_OR_CANCEL'|'FILL_OR_KILL'|'POST_ONLY_GOOD_TIL_CANCELLED'|'BUY_NOW'|'INSTANT']
    * @param  {String} clientOrderId - Optional. UUID for advanced order tracking.
    * @param  {Boolean} useAwards - Optional. Set useAwards=true to use Bittrex credits to pay transaction fee.
@@ -211,7 +211,7 @@ class BittrexClient {
       "id": "string (uuid)"
     }
    */
-  async sendOrder(market, direction, type, {quantity=null, ceiling=null, limit=null, timeInForce='GOOD_TIL_CANCELLED'}, clientOrderId, useAwards){
+  async sendOrder(market, direction, type, {quantity, ceiling, limit}={}, timeInForce='GOOD_TIL_CANCELLED', clientOrderId, useAwards){
     if (!market) throw new Error('market is required')
     if (direction !== 'BUY'|'SELL') throw new Error('direction must be either \'BUY\' or \'SELL\'')
     if (type !== 'LIMIT'|'MARKET'|'CEILING_LIMIT'|'CEILING_MARKET') throw new Error('type must be either: [\'LIMIT\'|\'MARKET\'|\'CEILING_LIMIT\'|\'CEILING_MARKET\']')
@@ -343,15 +343,8 @@ class BittrexClient {
       }
     }]
    */
-  async getOrderHistory({market, nextPageToken, previousPageToken, pageSize, startDate, endDate}) {
-    const requestBody = {
-      market: market,
-      nextPageToken: nextPageToken,
-      previousPageToken: previousPageToken,
-      pageSize: pageSize,
-      startDate: startDate,
-      endDate: endDate
-    }
+  async getOrderHistory({market, nextPageToken, previousPageToken, pageSize, startDate, endDate}={}) {
+    const requestBody = {market, nextPageToken, previousPageToken, pageSize, startDate, endDate}
     const results = await this.request('get', '/account/getorderhistory', requestBody)
     return this.parseDates(results, ['createdAt', 'updatedAt', 'closedAt'])
   }
@@ -360,22 +353,8 @@ class BittrexClient {
   // User/Account:
 
   /**
-   * @method balances - Retrieve account balances for all available currencies. Returns an array with an object for each currency for which there is either a balance or an address.
-   * @returns {Promise} - [{
-    "currencySymbol": "string",
-    "total": "number (double)",
-    "available": "number (double)",
-    "updatedAt": "string (date-time)"
-    }]
-  */
-  async balances() {
-    const results = this.request('get', '/balances')
-    return this.parseDates(results, ['updatedAt'])
-  }
-
-  /**
-   * @method balance - Retrieve current balance for specified currency.
-   * @param {String} currency - Required. Example: 'BTC'
+   * @method balance - Retrieve current balance for specified currencySymbol or a list of all balances. Returns a Balance object or an array of Balance objects.
+   * @param {String} currencySymbol - Optional. Example: 'BTC'
    * @returns {Promise} - {
     "currencySymbol": "string",
     "total": "number (double)",
@@ -383,15 +362,14 @@ class BittrexClient {
     "updatedAt": "string (date-time)"
     }
   */
-  async balance(currency) {
-    if (!currency) throw new Error('currency is required')
-    const results = this.request('get', `/balances/${currency}`)
+  async balance(currencySymbol) {
+    const results = this.request('get', `/balances/${currencySymbol}`)
     return this.parseDates(results, ['updatedAt'])
   }
 
   /**
-   * @method getNewDepositAddress - Request a new deposit address for specified currency. Returns an address object.
-   * @param {String} currency - Required. Example: 'BTC'
+   * @method getNewDepositAddress - Request a new deposit address for specified currencySymbol. Returns an address object.
+   * @param {String} currencySymbol - Required. Example: 'BTC'
    * @returns {Promise} - {
     "status": "string",
     "currencySymbol": "string",
@@ -399,15 +377,15 @@ class BittrexClient {
     "cryptoAddressTag": "string"
   }
   */
-  async getNewDepositAddress(currency) {
-    if (!currency) throw new Error('currency is required')
+  async getNewDepositAddress(currencySymbol) {
+    if (!currencySymbol) throw new Error('currencySymbol is required')
     const requestBody = {
-      currencySymbol: currency }
+      currencySymbol: currencySymbol }
     return this.request('post', '/addresses', requestBody)
   }
   /**
-   * @method getAddresses - Retrieve existing deposit address for specified currency, or for all currencies if not specified. Returns an array of address objects.
-   * @param {} currency - Optional. Example: 'BTC'
+   * @method getAddresses - Retrieve existing deposit address for specified currencySymbol, or for all currencies if not specified. Returns an address object or an array of address objects.
+   * @param {} currencySymbol - Optional. Example: 'BTC'
    * @returns {Promise} - [{
     "status": "string",
     "currencySymbol": "string",
@@ -415,50 +393,117 @@ class BittrexClient {
     "cryptoAddressTag": "string"
     }]
     */
-  async getAddresses(currency){
-    const requestBody = {
-      currencySymbol: currency
+  async getAddresses(currencySymbol){
+    return this.request('get', `/addresses/${currencySymbol}`)
+  }
+
+  
+  /**
+   * @method requestWithdrawal - Start a new withdrawal. Returns a Withdrawal object.
+   * @param  {String} currencySymbol - Required. Example: 'BTC'
+   * @param  {Number} quantity - (Double) Required.
+   * @param  {String} cryptoAddress - Required.
+   * @param  {String} cryptoAdressTag - Optional. Required for certain currencies.
+   * @param  {String} clientWithdrawalId - Optional. Client-provided UUID-formatted string, needed to cancel withdrawal.
+   * @returns {Promise} - {
+    "id": "string (uuid)",
+    "currencySymbol": "string",
+    "quantity": "number (double)",
+    "cryptoAddress": "string",
+    "cryptoAddressTag": "string",
+    "txCost": "number (double)",
+    "txId": "string",
+    "status": "string",
+    "createdAt": "string (date-time)",
+    "completedAt": "string (date-time)",
+    "clientWithdrawalId": "string (uuid)"
     }
-    return this.request('get', requestBody)
-  }
-
-  /**
-   * @method withdraw
-   * @param {String} currency
-   * @param {String|Number} options.quantity
-   * @param {String} options.address
-   * @param {String} [options.paymentid]
-   * @returns {Promise}
    */
-  async withdraw(currency, { quantity, address, paymentid } = {}) {
-    if (!currency) throw new Error('currency is required')
-    if (!quantity) throw new Error('options.quantity is required')
-    if (!address) throw new Error('options.address is required')
-    const params = { currency, quantity, address, paymentid }
-    return this.request('get', '/account/withdraw', { params })
+  async requestWithdrawal(currencySymbol, quantity, cryptoAddress, {cryptoAdressTag, clientWithdrawalId}={}) {
+    if (!currencySymbol) throw new Error('currencySymbol is required')
+    if (!quantity) throw new Error('quantity is required')
+    if (!cryptoAddress) throw new Error('address is required')
+    const requestBody = {currencySymbol, quantity, cryptoAddress, cryptoAdressTag, clientWithdrawalId}
+    const results = await this.request('post', '/withdrawals', {requestBody})
+    return this.parseDates(results, ['createdAt','completedAt'])
   }
 
 
+  
   /**
-   * @method withdrawalHistory
-   * @param {String} [currency]
-   * @returns {Promise}
+   * @method withdrawalHistory - Retrieve list of withdrawals. Either open or closed withdrawals. Default returns open. Returns an array of Withdrawal objects.
+   * @param  {String} currencySymbol - Optional. Example: 'BTC'
+   * @param  {String} status - Optional. Filter by ststus. ['REQUESTED'|'AUTHORIZED'|'PENDING'|'ERROR_INVALID_ADDRESS'] for open withdrawals, or ['COMPLETED'|'CANCELLED'] for closed withdrawals.
+   * @param  {Boolean} open=true - Optional. Retrieve open withdrawals if true, or closed withdrawals if false.
+   * @returns {Promise} - [{
+    "id": "string (uuid)",
+    "currencySymbol": "string",
+    "quantity": "number (double)",
+    "cryptoAddress": "string",
+    "cryptoAddressTag": "string",
+    "txCost": "number (double)",
+    "txId": "string",
+    "status": "string",
+    "createdAt": "string (date-time)",
+    "completedAt": "string (date-time)",
+    "clientWithdrawalId": "string (uuid)"
+    }]
    */
-  async withdrawalHistory(currency) {
-    const params = { currency }
-    const results = await this.request('get', '/account/getwithdrawalhistory', { params })
-    return this.parseDates(results, ['LastUpdated'])
+  async withdrawalHistory(open=true,{currencySymbol,status}={}) {
+    const requestBody = {currencySymbol,status}
+    let results
+    if (open) results = await this.request('get', '/withdrawals/open', {requestBody})
+    else results = await this.request('get', '/withdrawals/closed', {requestBody})
+    return this.parseDates(results, ['createdAt','completedAt'])
   }
 
   /**
-   * @method depositHistory
-   * @param {String} [currency]
-   * @returns {Promise}
+   * @method cancelWithdrawal - Cancel an open withdrawal request. Only works if Withdrawal.status==['REQUESTED'|'AUTHORIZED'|'ERROR_INVALID_ADDRESS']
+   * @param  {String} withdrawalId - Required. UUID-formatted string matching clientWithdrawalId that was provided when requesting withdrawal.
+   * @returns {Promise} - {
+    "id": "string (uuid)",
+    "currencySymbol": "string",
+    "quantity": "number (double)",
+    "cryptoAddress": "string",
+    "cryptoAddressTag": "string",
+    "txCost": "number (double)",
+    "txId": "string",
+    "status": "string",
+    "createdAt": "string (date-time)",
+    "completedAt": "string (date-time)",
+    "clientWithdrawalId": "string (uuid)"
+    }
    */
-  async depositHistory(currency) {
-    const params = { currency }
-    const results = await this.request('get', '/account/getdeposithistory', { params })
-    return this.parseDates(results, ['LastUpdated'])
+  async cancelWithdrawal(withdrawalId){
+    if (!withdrawalId) throw new Error('withdrawalId is required')
+    const results = await this.request('delete', `/withdrawals/${withdrawalId}`)
+    return this.parseDates(results, ['createdAt','completedAt'])
+  }
+
+  /**
+   * @method depositHistory - Retrieve list of deposts. Can filter by pending|completed or by currencySymbol. Returns an array of Deposit objects.
+   * @param {Boolean} pending=false - Optional. true will return pending deposits. false will return completed deposits.
+   * @param {String} [currencySymbol] - Optional. Example: 'BTC'
+   * @returns {Promise} - [{
+    "id": "string (uuid)",
+    "currencySymbol": "string",
+    "quantity": "number (double)",
+    "cryptoAddress": "string",
+    "cryptoAddressTag": "string",
+    "txId": "string",
+    "confirmations": "integer (int32)",
+    "updatedAt": "string (date-time)",
+    "completedAt": "string (date-time)",
+    "status": "string",
+    "source": "string"
+    }]
+   */
+  async depositHistory(pending=false,currencySymbol) {
+    const requestBody = { currencySymbol }
+    let results
+    if (pending) results = await this.request('get', '/deposits/open', {requestBody})
+    else results = await this.request('get', '/deposits/closed', {requestBody})
+    return this.parseDates(results, ['createdAt','completedAt'])
   }
 
   /*-------------------------------------------------------------------------*
