@@ -179,6 +179,42 @@ class BittrexClient {
    *-------------------------------------------------------------------------*/
   // Trading:
   /**
+   * @method sendOrder - Submit a new order to the exchange.
+   * @param  {String} market - Required. Example: 'BTC-USD'
+   * @param  {String} direction - Required. ['BUY'|'SELL']
+   * @param  {String} type - Required. ['LIMIT'|'MARKET'|'CEILING_LIMIT'|'CEILING_MARKET']
+   * @param  {Number} quantity - Required if type=['LIMIT'|'MARKET']. Excluded if type=['CEILING_LIMIT'|'CEILING_MARKET'].
+   * @param  {Number} ceiling - Required if type=['CEILING_LIMIT'|'CEILING_MARKET']. Excluded if type=['LIMIT'|'MARKET'].
+   * @param  {Number} limit - Order price. Required if type=['LIMIT'|'CEILING_LIMIT']. Excluded if type=['MARKET'|'CEILING_MARKET']
+   * @param  {String} timeInForce - Required. ['GOOD_TIL_CANCELLED'|'IMMEDIATE_OR_CANCEL'|'FILL_OR_KILL'|'POST_ONLY_GOOD_TIL_CANCELLED'|'BUY_NOW'|'INSTANT']
+   * @param  {String} clientOrderId - Optional. UUID for advanced order tracking.
+   * @param  {Boolean} useAwards - Optional. Set useAwards=true to use Bittrex credits to pay transaction fee.
+   */
+  async sendOrder(market, direction, type, quantity=null, ceiling=null, limit=null, timeInForce, clientOrderId, useAwards){
+    if (!market) throw new Error('market is required')
+    if (direction !== 'BUY'|'SELL') throw new Error('direction must be either \'BUY\' or \'SELL\'')
+    if (type !== 'LIMIT'|'MARKET'|'CEILING_LIMIT'|'CEILING_MARKET') throw new Error('type must be either [\'LIMIT\'|\'MARKET\'|\'CEILING_LIMIT\'|\'CEILING_MARKET\']')
+    if (type === 'LIMIT'|'MARKET' && !quantity) throw new Error('quantity must be included if type=[\'MARKET\'|\'LIMIT\']')    
+    if (type === 'LIMIT'|'MARKET' && ceiling) throw new Error('Do not specify ceiling if type=[\'MARKET\'|\'LIMIT\']')
+    if (type === 'CIELING_LIMIT'|'CIELING_MARKET' && !ceiling) throw new Error('ceiling must be included if type=[\'CEILING_MARKET\'|\'CEILING_LIMIT\']')
+    if (type === 'CIELING_LIMIT'|'CIELING_MARKET' && quantity) throw new Error('Do not specify quantity if type=[\'CEILING_MARKET\'|\'CEILING_LIMIT\']')
+    if (type === 'LIMIT'|'CEILING_LIMIT' && !limit) throw new Error('limit must be included if type=[\'LIMIT\'|\'CEILING_LIMIT\']')
+    if (type === 'MARKET'|'CEILING_MARKET' && limit) throw new Error('Do not specify limit if type=[\'MARKET\'|\'CEILING_MARKET\']')
+    const requestBody = {
+      market: market,
+      direction: direction,
+      type: type,
+      quantity: quantity,
+      ceiling: ceiling,
+      limit: limit,
+      timeInForce: timeInForce,
+      clientOrderId: clientOrderId,
+      useAwards: useAwards
+    }
+
+  }
+
+  /**
    * @method buyLimit
    * @param {String} market
    * @param {String|Number} options.quantity
