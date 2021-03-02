@@ -80,8 +80,8 @@ class BittrexClient {
   }
 
   /**
-   * @method ticker - Get current ticker quote (bid/ask/last price). Returns a single object if {market} param included, or array of all available markets if no {market} specified.
-   * @param {String} market - Optional. Example: 'BTC-USD'
+   * @method ticker - Get current ticker quote (bid/ask/last price). Returns a single object if {marketSymbol} param included, or array of all available markets if no {marketSymbol} specified.
+   * @param {String} marketSymbol - Optional. Example: 'BTC-USD'
    * @returns {Promise} - {
       "symbol": "string",
       "lastTradeRate": "number (double)",
@@ -89,8 +89,8 @@ class BittrexClient {
       "askRate": "number (double)"
     }
    */
-  async ticker(market) {
-    if (market) return this.request('get', `/markets/${market}/ticker`)
+  async ticker(marketSymbol) {
+    if (marketSymbol) return this.request('get', `/markets/${marketSymbol}/ticker`)
     else return this.request('get', '/markets/tickers')
   }
 
@@ -114,7 +114,7 @@ class BittrexClient {
 
   /**
    * @method marketSummary - Get 24 hour summary for specified market. Returns a single object.
-   * @param {String} market - Required. Example: 'BTC-USD'
+   * @param {String} marketSymbol - Required. Example: 'BTC-USD'
    * @returns {Promise} - {
       "symbol": "string",
       "high": "number (double)",
@@ -125,15 +125,15 @@ class BittrexClient {
       "updatedAt": "string (date-time)"
     }
    */
-  async marketSummary(market) {
-    if (!market) throw new Error('market is required')
-    const results = await this.request('get', `/markets/${market}/summary`)
+  async marketSummary(marketSymbol) {
+    if (!marketSymbol) throw new Error('marketSymbol is required')
+    const results = await this.request('get', `/markets/${marketSymbol}/summary`)
     return this.parseDates(results, ['updatedAt'])
   }
 
   /**
    * @method marketHistory - Get list of most recently executed trades for specified market. Returns an array.
-   * @param {String} market - Reqired. Example: 'BTC-USD'
+   * @param {String} marketSymbol - Reqired. Example: 'BTC-USD'
    * @returns {Promise} - [
     {
       "id": "string (uuid)",
@@ -143,15 +143,15 @@ class BittrexClient {
       "takerSide": "string"
     }]
    */
-  async marketHistory(market) {
-    if (!market) throw new Error('market is required')
-    const results = await this.request('get', `/markets/${market}/trades`)
+  async marketHistory(marketSymbol) {
+    if (!marketSymbol) throw new Error('marketSymbol is required')
+    const results = await this.request('get', `/markets/${marketSymbol}/trades`)
     return this.parseDates(results, ['executedAt'])
   }
 
   /**
    * @method orderBook - Get orderbook for specified market. 25 levels deep if no depth specified. Returns an object containing 2 arrays, one for each side of the orderbook.
-   * @param {String} market - Required. Example: 'BTC-USD'
+   * @param {String} marketSymbol - Required. Example: 'BTC-USD'
    * @param {Number} depth - optional, default depth is 25 if this param is not included.
    * @returns {Promise} - {
     "bid": [
@@ -168,10 +168,55 @@ class BittrexClient {
     ]
   }
    */
-  async orderBook(market, depth) {
-    if (!market) throw new Error('market is required')
+  async orderBook(marketSymbol, depth) {
+    if (!marketSymbol) throw new Error('marketSymbol is required')
     if (!depth) throw new Error('options.depth is required')
-    return this.request('get', `/markets/${market}/orderbook`, depth)
+    return this.request('get', `/markets/${marketSymbol}/orderbook`, depth)
+  }
+
+  /**
+   * @method getCandlesRecent - Retrieve most recent candles for specified market. Returns an array of Candle objects.
+   * @param  {String} marketSymbol - Required. Example: 'BTC-USD'
+   * @param  {String} candleInterval - Required. Must be: ['MINUTE_1'|'MINUTE_5'|'HOUR_1'|'DAY_1']
+   * @param  {String} candleType='TRADE' - Optional. Either 'TRADE' or 'MIDPOINT'. Default 'TRADE'.
+   * @returns {Promise} - [{
+    "startsAt": "string (date-time)",
+    "open": "number (double)",
+    "high": "number (double)",
+    "low": "number (double)",
+    "close": "number (double)",
+    "volume": "number (double)",
+    "quoteVolume": "number (double)"
+    }]
+   */
+  async getCandlesRecent(marketSymbol,candleInterval,candleType='TRADE'){
+    if (!marketSymbol) throw new Error('marketSymbol is required')
+    if (!candleInterval) throw new Error('candleInterval is required')
+    const results = await this.request('get', `/markets/${marketSymbol}/candles/${candleType}/${candleInterval}/recent`)
+    return this.parseDates(results, ['startsAt'])
+  }
+
+   /**
+   * @method getCandlesHistorical - Retrieve candles from historical period for specified market. Returns an array of Candle objects.
+   * @param  {String} marketSymbol - Required. Example: 'BTC-USD'
+   * @param  {String} candleInterval - Required. Must be: ['MINUTE_1'|'MINUTE_5'|'HOUR_1'|'DAY_1']
+   * @param  {Number} year - (integer) - Required.
+   * @param  {Number} month - (integer) - Required.
+   * @param  {Number} day - (integer) - Required.
+   * @param  {String} candleType='TRADE' - Optional. Either 'TRADE' or 'MIDPOINT'. Default 'TRADE'.
+   * @returns {Promise} - [{
+    "startsAt": "string (date-time)",
+    "open": "number (double)",
+    "high": "number (double)",
+    "low": "number (double)",
+    "close": "number (double)",
+    "volume": "number (double)",
+    "quoteVolume": "number (double)"
+    }]
+   */
+  async getCandlesHistorical(marketSymbol, candleInterval,year,month,day,candleType='TRADE'){
+    const results = await this.request('get', `/markets/${marketSymbol}/candles/${candleType}/${candleInterval}/historical/${year}/${month}/${day}`)
+    return this.parseDates(results, ['startsAt'])
   }
 
   /*-------------------------------------------------------------------------*
@@ -180,7 +225,7 @@ class BittrexClient {
   // Trading:
   /**
    * @method sendOrder - Submit a new order to the exchange. Returns a single object.
-   * @param  {String} market - Required. Example: 'BTC-USD'
+   * @param  {String} marketSymbol - Required. Example: 'BTC-USD'
    * @param  {String} direction - Required. ['BUY'|'SELL']
    * @param  {String} type - Required. ['LIMIT'|'MARKET'|'CEILING_LIMIT'|'CEILING_MARKET']
    * @param  {Number} quantity - Required if type=['LIMIT'|'MARKET']. Excluded if type=['CEILING_LIMIT'|'CEILING_MARKET'].
@@ -211,8 +256,8 @@ class BittrexClient {
       "id": "string (uuid)"
     }
    */
-  async sendOrder(market, direction, type, {quantity, ceiling, limit}={}, timeInForce='GOOD_TIL_CANCELLED', clientOrderId, useAwards){
-    if (!market) throw new Error('market is required')
+  async sendOrder(marketSymbol, direction, type, {quantity, ceiling, limit}={}, timeInForce='GOOD_TIL_CANCELLED', clientOrderId, useAwards){
+    if (!marketSymbol) throw new Error('marketSymbol is required')
     if (direction !== 'BUY'|'SELL') throw new Error('direction must be either \'BUY\' or \'SELL\'')
     if (type !== 'LIMIT'|'MARKET'|'CEILING_LIMIT'|'CEILING_MARKET') throw new Error('type must be either: [\'LIMIT\'|\'MARKET\'|\'CEILING_LIMIT\'|\'CEILING_MARKET\']')
     if (type === 'LIMIT'|'MARKET' && !quantity) throw new Error('quantity must be included if type=[\'MARKET\'|\'LIMIT\']')    
@@ -223,7 +268,7 @@ class BittrexClient {
     if (type === 'MARKET'|'CEILING_MARKET' && limit) throw new Error('Do not specify limit if type=[\'MARKET\'|\'CEILING_MARKET\']')
     if (timeInForce !== 'GOOD_TIL_CANCELLED'|'IMMEDIATE_OR_CANCEL'|'FILL_OR_KILL'|'POST_ONLY_GOOD_TIL_CANCELLED'|'BUY_NOW'|'INSTANT') throw new Error('timeInForce must be one of: [\'GOOD_TIL_CANCELLED\'|\'IMMEDIATE_OR_CANCEL\'|\'FILL_OR_KILL\'|\'POST_ONLY_GOOD_TIL_CANCELLED\'|\'BUY_NOW\'|\'INSTANT\']')
     const requestBody = {
-      market: market,
+      marketSymbol: marketSymbol,
       direction: direction,
       type: type,
       quantity: quantity,
@@ -240,7 +285,7 @@ class BittrexClient {
   /**
    * @method openOrders - Retrieve all open orders. Can be narrowed by specifying market or clientOrderId. Returns an array of objects.
    * @param {String} clientOrderId='open' - Optional. UUID-formatted string.
-   * @param {String} market - Optional. Example: 'BTC-USD'
+   * @param {String} marketSymbol - Optional. Example: 'BTC-USD'
    * @returns {Promise} - [{
     "id": "string (uuid)",
     "marketSymbol": "string",
@@ -263,9 +308,9 @@ class BittrexClient {
       "id": "string (uuid)"
     }}]
    */
-  async getOpenOrders(clientOrderId='open',market) {
+  async getOpenOrders(clientOrderId='open',marketSymbol) {
     const requestBody = {
-      market: market
+      marketSymbol: marketSymbol
     }
     const results = await this.request('get', `/orders/${clientOrderId}`, requestBody)
     return this.parseDates(results, ['createdAt','updatedAt','closedAt'])
@@ -273,9 +318,9 @@ class BittrexClient {
 
   
   /**
-   * @method cancelOrder - Cancel existing orders. Default will cancel ALL orders. Specify either market or clientOrderId to cancel specific orders only. Returns an object or array of objects.
+   * @method cancelOrder - Cancel existing orders. Default will cancel ALL orders. Specify either marketSymbol or clientOrderId to cancel specific orders only. Returns an object or array of objects.
    * @param  {String} clientOrderId='open' - Optional. UUID-formatted string.
-   * @param  {String} market - Optional. Example: 'BTC-USD'
+   * @param  {String} marketSymbol - Optional. Example: 'BTC-USD'
    * @returns {promise} - [{
     "id": "string (uuid)",
     "statusCode": "string",
@@ -302,9 +347,9 @@ class BittrexClient {
       }
     }}]
    */
-  async cancelOrder(clientOrderId='open',market){
+  async cancelOrder(clientOrderId='open',marketSymbol){
     const requestBody = {
-      market: market
+      marketSymbol: marketSymbol
     }
     const results = this.request('delete',`/orders/${clientOrderId}`,requestBody)
     return this.parseDates(results, ['createdAt','updatedAt','closedAt'])
@@ -313,8 +358,8 @@ class BittrexClient {
    
   
   /**
-   * @method getOrderHistory - Retrieve a lost of all closed orders. Query can by narrowed by specifying market. Returns an array of Order objects.
-   * @param  {String} market - Optional. Example: 'BTC'
+   * @method getOrderHistory - Retrieve a lost of all closed orders. Query can by narrowed by specifying marketSymbol. Returns an array of Order objects.
+   * @param  {String} marketSymbol - Optional. Example: 'BTC'
    * @param  {String} nextPageToken - Optional. Used for traversing a paginated set in the forward direction. May only be specified if PreviousPageToken is not specified.
    * @param  {String} previousPageToken - Optional. Used for traversing a paginated set in the reverse direction. May only be specified if NextPageToken is not specified.
    * @param  {Number} pageSize - Integer. [1-200] Optional. Default 100. Maximum number of items to retrieve.
@@ -343,8 +388,8 @@ class BittrexClient {
       }
     }]
    */
-  async getOrderHistory({market, nextPageToken, previousPageToken, pageSize, startDate, endDate}={}) {
-    const requestBody = {market, nextPageToken, previousPageToken, pageSize, startDate, endDate}
+  async getOrderHistory({marketSymbol, nextPageToken, previousPageToken, pageSize, startDate, endDate}={}) {
+    const requestBody = {marketSymbol, nextPageToken, previousPageToken, pageSize, startDate, endDate}
     const results = await this.request('get', '/account/getorderhistory', requestBody)
     return this.parseDates(results, ['createdAt', 'updatedAt', 'closedAt'])
   }
