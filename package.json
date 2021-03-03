@@ -31,6 +31,6 @@
   },
   "scripts": {
     "lint": "npx eslint ./",
-    "test": "npx mocha --exit --bail --slow 1000 --timeout 5000 ./test"
+    "test": "npx mocha --exit --bail --slow 500 --timeout 5000 ./test"
   }
 }

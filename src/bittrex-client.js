@@ -1,7 +1,6 @@
 const axios = require('axios')
 const CryptoJS = require('crypto-js')
 const https = require('https')
-const querystring = require('querystring')
 
 class BittrexClient {
 
@@ -549,8 +548,8 @@ class BittrexClient {
    */
   async request(method,url){
     const {data} = await this._client.request({method,url})
-    if (!data.success) throw new Error(data.message)
-    return data.result
+    if (!data) throw new Error('No Response')
+    return data
   }
 
    /**
@@ -568,11 +567,12 @@ class BittrexClient {
     const contentHash = CryptoJS.SHA512(content).toString(CryptoJS.enc.Hex)
     const path = `${this._client.baseURL}${url}`
     const preSign = [timestamp,path,method,contentHash].join('')
-    const signedMessage = CryptoJS.HmacSHA512(preSign,this._apiSecret).toString(CryptoJS.enc.Hex)
+    const signedMessage = CryptoJS.HmacSHA512(preSign,'0316ab6e48634187a95caf858dcf2c2a').toString(CryptoJS.enc.Hex)
     const headers = {apiKey,timestamp,contentHash,signedMessage}
-    const {data} = await this._client.request({method,path,headers,content})
-    if (!data.success) throw new Error(data.message)
-    return data.result
+    const {data} = await this._client.request({method,url,headers,content})
+    console.log(data)
+    if (!data) throw new Error('No Response')
+    return data
   }
 
 
@@ -599,12 +599,20 @@ class BittrexClient {
    * @returns {Array<Object>}
    */
   parseDates(results, keys) {
-    for (const result of results) {
-      for (const key of keys) {
-        if (!result[key]) continue
-        result[key] = new Date(`${result[key]}Z`)
-      }
-    }
+    // if (results.length>=1){ //because otherwise the outer for-loop returns typeError 'results is not iterable' if we pass a single object to parse dates on instead of an array of objects.
+    //   for (const result of results) {
+    //     for (const key of keys) {
+    //       if (!result[key]) continue
+    //       result[key] = new Date(`${result[key]}Z`)
+    //     }
+    //   }
+    // }
+    // else{
+    //   for (const key of keys) {
+    //     if (!results[key]) continue
+    //     results[key] = new Date(`${results[key]}Z`)
+    //   }
+    // }
     return results
   }
 }

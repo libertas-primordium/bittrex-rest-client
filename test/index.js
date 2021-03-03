@@ -1,12 +1,12 @@
 const should = require('should')
 const { BittrexClient } = require('../')
 const client = new BittrexClient({
-  apiKey: process.env.API_KEY,
-  apiSecret: process.env.API_SECRET
+  apiKey: process.env.KEY,
+  apiSecret: process.env.SECRET
 })
 
 describe('bittrex-node', () => {
-  describe('public', () => {
+  describe('non-authenticated API calls', () => {
     it('should get markets', async () => {
       let results = await client.markets()
       should.exist(results)
@@ -20,13 +20,11 @@ describe('bittrex-node', () => {
     })
 
     it('should get ticker', async () => {
-      let { Bid, Ask, Last } = await client.ticker('BTC-XLM')
-      should.exist(Bid)
-      should.exist(Ask)
-      should.exist(Last)
-      Bid.should.be.above(0)
-      Ask.should.be.above(0)
-      Last.should.be.above(0)
+      let ticker = await client.ticker('BTC-USD')
+      ticker.symbol.should.equal('BTC-USD')
+      ticker.lastTradeRate.should.be.above(0)
+      ticker.bidRate.should.be.above(0)
+      ticker.askRate.should.be.above(0)
     })
 
     it('should get market summaries', async () => {
@@ -36,31 +34,47 @@ describe('bittrex-node', () => {
     })
 
     it('should get market summary', async () => {
-      let results = await client.marketSummary('BTC-XLM')
+      let results = await client.marketSummary('BTC-USD')
       should.exist(results)
-      results.length.should.equal(1)
+      results.symbol.should.equal('BTC-USD')
+      results.high.should.be.above(0)
     })
 
-    it('should get market history', async () => {
-      let results = await client.marketHistory('BTC-XLM')
+    it('should get recent market trades', async () => {
+      let results = await client.marketTrades('BTC-USD')
       should.exist(results)
       results.length.should.be.above(0)
+      results[0].rate.should.be.above(0)
     })
 
     it('should get order book', async () => {
-      let { buy, sell } = await client.orderBook('BTC-XLM')
-      should.exist(buy)
-      should.exist(sell)
-      buy.length.should.be.above(0)
-      sell.length.should.be.above(0)
+      let results = await client.orderBook('BTC-USD')
+      should.exist(results)
+      results.bid.length.should.be.above(0)
+      results.ask.length.should.be.above(0)
+    })
+
+    it('should get recent candles', async () => {
+      let results = await client.getCandlesRecent('BTC-USD','MINUTE_5')
+      should.exist(results)
+      results.length.should.be.above(0)
+      results[0].quoteVolume.length.should.be.above(0)
+    })
+
+    it('should get historical candles', async () => {
+      let date = new Date()
+      let results = await client.getCandlesHistorical('BTC-USD','MINUTE_5',date.getFullYear()-1,date.getMonth(),date.getDay())
+      should.exist(results)
+      results.length.should.be.above(0)
+      results[0].quoteVolume.length.should.be.above(0)
     })
   })
 
-  describe('market', () => {
+  describe('authenticated trading API calls', () => {
     let buyOrderId
 
     it('should get open orders', async () => {
-      let results = await client.openOrders('BTC-XLM')
+      let results = await client.getOpenOrders('BTC-USD')
       should.exist(results)
       results.length.should.be.aboveOrEqual(0)
     })
@@ -86,7 +100,7 @@ describe('bittrex-node', () => {
     })
   })
 
-  describe('account', () => {
+  describe('authenticated account API calls', () => {
     it('should get balances', async () => {
       let results = await client.balances()
       should.exist(results)
@@ -105,7 +119,7 @@ describe('bittrex-node', () => {
     })
 
     it('should get order history', async () => {
-      let results = await client.orderHistory('BTC-XLM')
+      let results = await client.orderHistory('BTC-USD')
       should.exist(results)
       results.length.should.be.aboveOrEqual(0)
     })
