@@ -1,10 +1,9 @@
 const should = require('should')
 const { BittrexClient } = require('../')
+require('dotenv').config()
 const client = new BittrexClient({
   apiKey: process.env.KEY,
-  apiSecret: process.env.SECRET
-})
-
+  apiSecret: process.env.SECRET})
 describe('bittrex-node', () => {
   describe('non-authenticated API calls', () => {
     it('should get markets', async () => {
@@ -74,7 +73,7 @@ describe('bittrex-node', () => {
     let buyOrderId
 
     it('should get open orders', async () => {
-      let results = await client.getOpenOrders('BTC-USD')
+      let results = await client.getOpenOrders()
       should.exist(results)
       results.length.should.be.aboveOrEqual(0)
     })

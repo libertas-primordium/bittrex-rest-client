@@ -1,6 +1,7 @@
 const axios = require('axios')
 const CryptoJS = require('crypto-js')
 const https = require('https')
+require('dotenv').config()
 
 class BittrexClient {
 
@@ -10,7 +11,7 @@ class BittrexClient {
    * @param {String} [options.apiSecret=null]
    * @param {Boolean} [options.keepAlive=true]
    */
-  constructor({ apiKey = null, apiSecret = null, keepAlive = true } = {}) {
+  constructor({ apiKey, apiSecret, keepAlive = true } = {}) {
     this._apiKey = apiKey
     this._apiSecret = apiSecret
     this._nonce = new Date().getTime()
@@ -567,10 +568,9 @@ class BittrexClient {
     const contentHash = CryptoJS.SHA512(`${content}`).toString(CryptoJS.enc.Hex)
     const path = `${this._client.baseURL}${url}`
     const preSign = [timestamp,path,method,contentHash].join('')
-    const signedMessage = CryptoJS.HmacSHA512(preSign,'').toString(CryptoJS.enc.Hex)
+    const signedMessage = CryptoJS.HmacSHA512(preSign,this._apiSecret).toString(CryptoJS.enc.Hex)
     const headers = {apiKey,timestamp,contentHash,signedMessage}
     const {data} = await this._client.request({method,url,headers,content})
-    console.log(data)
     if (!data) throw new Error('No Response')
     return data
   }
