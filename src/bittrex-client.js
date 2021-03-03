@@ -275,7 +275,7 @@ class BittrexClient {
   }
 
   /**
-   * @method openOrders - List open orders. Can be narrowed by specifying market or clientOrderId. Returns an array of Order objects or a single Order object.
+   * @method openOrders - List open orders. May be narrowed by specifying either market or clientOrderId. Returns an array of Order objects or a single Order object.
    * @param {String} clientOrderId='open' - Optional. UUID-formatted string.
    * @param {String} marketSymbol - Optional. Example: 'BTC-USD'
    * @returns {Promise} - [{
@@ -300,16 +300,16 @@ class BittrexClient {
       "id": "string (uuid)"
     }}]
    */
-  async getOpenOrders(clientOrderId='open',marketSymbol) {
+  async getOpenOrders(clientOrderId='open',marketSymbol){
     const requestBody = {marketSymbol}
-    const results = await this.request('get', `/orders/${clientOrderId}`, requestBody)
+    const results = await this.request('get',`/orders/${clientOrderId}`,{requestBody})
     return this.parseDates(results, ['createdAt','updatedAt','closedAt'])
   }
 
 
   /**
-   * @method cancelOrder - Cancel existing orders. Default will cancel ALL orders. Specify either marketSymbol or clientOrderId to cancel specific orders only. Returns an object or array of objects.
-   * @param  {String} clientOrderId='open' - Optional. UUID-formatted string.
+   * @method cancelOrder - Cancel existing orders. Default will cancel ALL orders. Specify either marketSymbol or clientOrderId to cancel specific orders only. Returns an Order object or array of Order objets.
+   * @param  {String} clientOrderId='open' - Optional. UUID-formatted string to identify order.
    * @param  {String} marketSymbol - Optional. Example: 'BTC-USD'
    * @returns {promise} - [{
     "id": "string (uuid)",
@@ -338,17 +338,15 @@ class BittrexClient {
     }}]
    */
   async cancelOrder(clientOrderId='open',marketSymbol){
-    const requestBody = {
-      marketSymbol: marketSymbol
-    }
-    const results = this.request('delete',`/orders/${clientOrderId}`,requestBody)
-    return this.parseDates(results, ['createdAt','updatedAt','closedAt'])
+    const requestBody = {marketSymbol}
+    const results = this.request('delete',`/orders/${clientOrderId}`,{requestBody})
+    return this.parseDates(results,['createdAt','updatedAt','closedAt'])
   }
 
 
 
   /**
-   * @method getOrderHistory - Retrieve a lost of all closed orders. Query can by narrowed by specifying marketSymbol. Returns an array of Order objects.
+   * @method getOrderHistory - Retrieve a list of closed orders. Query can by narrowed by specifying marketSymbol. Returns an array of Order objects.
    * @param  {String} marketSymbol - Optional. Example: 'BTC'
    * @param  {String} nextPageToken - Optional. Used for traversing a paginated set in the forward direction. May only be specified if PreviousPageToken is not specified.
    * @param  {String} previousPageToken - Optional. Used for traversing a paginated set in the reverse direction. May only be specified if NextPageToken is not specified.
@@ -378,14 +376,14 @@ class BittrexClient {
       }
     }]
    */
-  async getOrderHistory({marketSymbol, nextPageToken, previousPageToken, pageSize, startDate, endDate}={}) {
-    const requestBody = {marketSymbol, nextPageToken, previousPageToken, pageSize, startDate, endDate}
-    const results = await this.request('get', '/account/getorderhistory', requestBody)
-    return this.parseDates(results, ['createdAt', 'updatedAt', 'closedAt'])
+  async getOrderHistory({marketSymbol,nextPageToken,previousPageToken,pageSize,startDate,endDate}={}){
+    const requestBody = {marketSymbol,nextPageToken,previousPageToken,pageSize,startDate,endDate}
+    const results = await this.request('get','/account/getorderhistory',{requestBody})
+    return this.parseDates(results,['createdAt','updatedAt','closedAt'])
   }
 
 
-  // User/Account:
+  /// User/Account:
 
   /**
    * @method balance - Retrieve current balance for specified currencySymbol or a list of all balances. Returns a Balance object or an array of Balance objects.
@@ -397,9 +395,9 @@ class BittrexClient {
     "updatedAt": "string (date-time)"
     }
   */
-  async balance(currencySymbol) {
-    const results = this.request('get', `/balances/${currencySymbol}`)
-    return this.parseDates(results, ['updatedAt'])
+  async balance(currencySymbol){
+    const results = this.request('get',`/balances/${currencySymbol}`)
+    return this.parseDates(results,['updatedAt'])
   }
 
   /**
@@ -412,15 +410,15 @@ class BittrexClient {
     "cryptoAddressTag": "string"
   }
   */
-  async getNewDepositAddress(currencySymbol) {
+  async getNewDepositAddress(currencySymbol){
     if (!currencySymbol) throw new Error('currencySymbol is required')
-    const requestBody = {
-      currencySymbol: currencySymbol }
-    return this.request('post', '/addresses', requestBody)
+    const requestBody = {currencySymbol}
+    return this.request('post','/addresses',{requestBody})
   }
+
   /**
-   * @method getAddresses - Retrieve existing deposit address for specified currencySymbol, or for all currencies if not specified. Returns an address object or an array of address objects.
-   * @param {} currencySymbol - Optional. Example: 'BTC'
+   * @method getAddresses - Retrieve existing deposit address for specified currencySymbol, or for all currencies if not specified. Returns an Address object or an array of Address objects.
+   * @param {String} currencySymbol - Optional. Example: 'BTC'
    * @returns {Promise} - [{
     "status": "string",
     "currencySymbol": "string",
@@ -429,7 +427,7 @@ class BittrexClient {
     }]
     */
   async getAddresses(currencySymbol){
-    return this.request('get', `/addresses/${currencySymbol}`)
+    return this.request('get',`/addresses/${currencySymbol}`)
   }
 
 
@@ -454,22 +452,20 @@ class BittrexClient {
     "clientWithdrawalId": "string (uuid)"
     }
    */
-  async requestWithdrawal(currencySymbol, quantity, cryptoAddress, {cryptoAdressTag, clientWithdrawalId}={}) {
+  async requestWithdrawal(currencySymbol,quantity,cryptoAddress,{cryptoAdressTag,clientWithdrawalId}={}){
     if (!currencySymbol) throw new Error('currencySymbol is required')
     if (!quantity) throw new Error('quantity is required')
     if (!cryptoAddress) throw new Error('address is required')
-    const requestBody = {currencySymbol, quantity, cryptoAddress, cryptoAdressTag, clientWithdrawalId}
-    const results = await this.request('post', '/withdrawals', {requestBody})
-    return this.parseDates(results, ['createdAt','completedAt'])
+    const requestBody = {currencySymbol,quantity,cryptoAddress,cryptoAdressTag,clientWithdrawalId}
+    const results = await this.request('post','/withdrawals',{requestBody})
+    return this.parseDates(results,['createdAt','completedAt'])
   }
-
-
 
   /**
    * @method withdrawalHistory - Retrieve list of withdrawals. Either open or closed withdrawals. Default returns open. Returns an array of Withdrawal objects.
-   * @param  {String} currencySymbol - Optional. Example: 'BTC'
-   * @param  {String} status - Optional. Filter by ststus. ['REQUESTED'|'AUTHORIZED'|'PENDING'|'ERROR_INVALID_ADDRESS'] for open withdrawals, or ['COMPLETED'|'CANCELLED'] for closed withdrawals.
    * @param  {Boolean} open=true - Optional. Retrieve open withdrawals if true, or closed withdrawals if false.
+   * @param  {String} currencySymbol - Optional. Example: 'BTC'
+   * @param  {String} status - Optional. Filter by status: ['REQUESTED'|'AUTHORIZED'|'PENDING'|'ERROR_INVALID_ADDRESS'] for open withdrawals, or ['COMPLETED'|'CANCELLED'] for closed withdrawals.
    * @returns {Promise} - [{
     "id": "string (uuid)",
     "currencySymbol": "string",
@@ -484,16 +480,16 @@ class BittrexClient {
     "clientWithdrawalId": "string (uuid)"
     }]
    */
-  async withdrawalHistory(open=true,{currencySymbol,status}={}) {
+  async withdrawalHistory(open=true,{currencySymbol,status}={}){
     const requestBody = {currencySymbol,status}
     let results
-    if (open) results = await this.request('get', '/withdrawals/open', {requestBody})
-    else results = await this.request('get', '/withdrawals/closed', {requestBody})
-    return this.parseDates(results, ['createdAt','completedAt'])
+    if (open) results = await this.request('get','/withdrawals/open',{requestBody})
+    else results = await this.request('get','/withdrawals/closed',{requestBody})
+    return this.parseDates(results,['createdAt','completedAt'])
   }
 
   /**
-   * @method cancelWithdrawal - Cancel an open withdrawal request. Only works if Withdrawal.status==['REQUESTED'|'AUTHORIZED'|'ERROR_INVALID_ADDRESS']
+   * @method cancelWithdrawal - Cancel an open withdrawal request. Only works if Withdrawal.status==['REQUESTED'|'AUTHORIZED'|'ERROR_INVALID_ADDRESS']. Returns a Withdrawal object.
    * @param  {String} withdrawalId - Required. UUID-formatted string matching clientWithdrawalId that was provided when requesting withdrawal.
    * @returns {Promise} - {
     "id": "string (uuid)",
@@ -511,8 +507,8 @@ class BittrexClient {
    */
   async cancelWithdrawal(withdrawalId){
     if (!withdrawalId) throw new Error('withdrawalId is required')
-    const results = await this.request('delete', `/withdrawals/${withdrawalId}`)
-    return this.parseDates(results, ['createdAt','completedAt'])
+    const results = await this.request('delete',`/withdrawals/${withdrawalId}`)
+    return this.parseDates(results,['createdAt','completedAt'])
   }
 
   /**
@@ -533,12 +529,12 @@ class BittrexClient {
     "source": "string"
     }]
    */
-  async depositHistory(pending=false,currencySymbol) {
-    const requestBody = { currencySymbol }
+  async depositHistory(pending=false,currencySymbol){
+    const requestBody = {currencySymbol}
     let results
-    if (pending) results = await this.request('get', '/deposits/open', {requestBody})
-    else results = await this.request('get', '/deposits/closed', {requestBody})
-    return this.parseDates(results, ['createdAt','completedAt'])
+    if (pending) results = await this.request('get','/deposits/open',{requestBody})
+    else results = await this.request('get','/deposits/closed',{requestBody})
+    return this.parseDates(results,['createdAt','completedAt'])
   }
 
   /*-------------------------------------------------------------------------*
