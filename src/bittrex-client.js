@@ -13,7 +13,7 @@ class BittrexClient {
   constructor({ apiKey = null, apiSecret = null, keepAlive = true } = {}) {
     this._apiKey = apiKey
     this._apiSecret = apiSecret
-    this._nonce = Date.now()
+    this._nonce = new Date().getTime()
     this._client = axios.create({
       baseURL: 'https://api.bittrex.com/v3',
       httpsAgent: new https.Agent({ keepAlive })
@@ -275,8 +275,8 @@ class BittrexClient {
 
   /**
    * @method openOrders - List open orders. May be narrowed by specifying either market or clientOrderId. Returns an array of Order objects or a single Order object.
-   * @param {String} clientOrderId='open' - Optional. UUID-formatted string.
    * @param {String} marketSymbol - Optional. Example: 'BTC-USD'
+   * @param {String} clientOrderId='open' - Optional. UUID-formatted string.
    * @returns {Promise} - [{
     "id": "string (uuid)",
     "marketSymbol": "string",
@@ -299,7 +299,7 @@ class BittrexClient {
       "id": "string (uuid)"
     }}]
    */
-  async getOpenOrders(clientOrderId='open',marketSymbol){
+  async getOpenOrders(marketSymbol,clientOrderId='open'){
     const requestBody = {marketSymbol}
     const results = await this.requestAuth('GET',`/orders/${clientOrderId}`,{requestBody})
     return this.parseDates(results, ['createdAt','updatedAt','closedAt'])
@@ -562,12 +562,12 @@ class BittrexClient {
    */
   async requestAuth(method,url,requestBody={}){
     const apiKey = this._apiKey
-    const timestamp = Date.now()
+    const timestamp = new Date().getTime()
     const content = this.sanitizeRequestBody(requestBody)
-    const contentHash = CryptoJS.SHA512(content).toString(CryptoJS.enc.Hex)
+    const contentHash = CryptoJS.SHA512(`${content}`).toString(CryptoJS.enc.Hex)
     const path = `${this._client.baseURL}${url}`
     const preSign = [timestamp,path,method,contentHash].join('')
-    const signedMessage = CryptoJS.HmacSHA512(preSign,'0316ab6e48634187a95caf858dcf2c2a').toString(CryptoJS.enc.Hex)
+    const signedMessage = CryptoJS.HmacSHA512(preSign,'').toString(CryptoJS.enc.Hex)
     const headers = {apiKey,timestamp,contentHash,signedMessage}
     const {data} = await this._client.request({method,url,headers,content})
     console.log(data)
