@@ -1,5 +1,5 @@
 const axios = require('axios')
-const crypto = require('crypto')
+const CryptoJS = require('crypto-js')
 const https = require('https')
 const querystring = require('querystring')
 
@@ -48,7 +48,7 @@ class BittrexClient {
     }]
    */
   async markets(){
-    const results = await this.request('get','/markets')
+    const results = await this.request('GET','/markets')
     return this.parseDates(results,['createdAt'])
   }
 
@@ -76,7 +76,7 @@ class BittrexClient {
     }]
    */
   async currencies(){
-    return this.request('get','/currencies')
+    return this.request('GET','/currencies')
   }
 
   /**
@@ -90,8 +90,8 @@ class BittrexClient {
     }
    */
   async ticker(marketSymbol){
-    if (marketSymbol) return this.request('get',`/markets/${marketSymbol}/ticker`)
-    else return this.request('get','/markets/tickers')
+    if (marketSymbol) return this.request('GET',`/markets/${marketSymbol}/ticker`)
+    else return this.request('GET','/markets/tickers')
   }
 
   /**
@@ -107,7 +107,7 @@ class BittrexClient {
     }]
    */
   async marketSummaries(){
-    const results = await this.request('get','/markets/summaries')
+    const results = await this.request('GET','/markets/summaries')
     return this.parseDates(results,['updatedAt'])
   }
 
@@ -126,7 +126,7 @@ class BittrexClient {
    */
   async marketSummary(marketSymbol){
     if (!marketSymbol) throw new Error('marketSymbol is required')
-    const results = await this.request('get',`/markets/${marketSymbol}/summary`)
+    const results = await this.request('GET',`/markets/${marketSymbol}/summary`)
     return this.parseDates(results,['updatedAt'])
   }
 
@@ -143,7 +143,7 @@ class BittrexClient {
    */
   async marketTrades(marketSymbol){
     if (!marketSymbol) throw new Error('marketSymbol is required')
-    const results = await this.request('get',`/markets/${marketSymbol}/trades`)
+    const results = await this.request('GET',`/markets/${marketSymbol}/trades`)
     return this.parseDates(results,['executedAt'])
   }
 
@@ -168,7 +168,7 @@ class BittrexClient {
    */
   async orderBook(marketSymbol,depth=25){
     if (!marketSymbol) throw new Error('marketSymbol is required')
-    return this.request('get',`/markets/${marketSymbol}/orderbook`,{depth})
+    return this.request('GET',`/markets/${marketSymbol}/orderbook`,{depth})
   }
 
   /**
@@ -190,7 +190,7 @@ class BittrexClient {
   async getCandlesRecent(marketSymbol,candleInterval,candleType='TRADE'){
     if (!marketSymbol) throw new Error('marketSymbol is required')
     if (!candleInterval) throw new Error('candleInterval is required')
-    const results = await this.request('get',`/markets/${marketSymbol}/candles/${candleType}/${candleInterval}/recent`)
+    const results = await this.request('GET',`/markets/${marketSymbol}/candles/${candleType}/${candleInterval}/recent`)
     return this.parseDates(results,['startsAt'])
   }
 
@@ -214,7 +214,7 @@ class BittrexClient {
     }]
    */
   async getCandlesHistorical(marketSymbol,candleInterval,year,month,day,candleType='TRADE'){
-    const results = await this.request('get',`/markets/${marketSymbol}/candles/${candleType}/${candleInterval}/historical/${year}/${month}/${day}`)
+    const results = await this.request('GET',`/markets/${marketSymbol}/candles/${candleType}/${candleInterval}/historical/${year}/${month}/${day}`)
     return this.parseDates(results,['startsAt'])
   }
 
@@ -270,7 +270,7 @@ class BittrexClient {
     if (type === 'MARKET'|'CEILING_MARKET' && limit) throw new Error('Do not specify limit if type=[\'MARKET\'|\'CEILING_MARKET\']')
     if (timeInForce !== 'GOOD_TIL_CANCELLED'|'IMMEDIATE_OR_CANCEL'|'FILL_OR_KILL'|'POST_ONLY_GOOD_TIL_CANCELLED'|'BUY_NOW'|'INSTANT') throw new Error('timeInForce must be one of: [\'GOOD_TIL_CANCELLED\'|\'IMMEDIATE_OR_CANCEL\'|\'FILL_OR_KILL\'|\'POST_ONLY_GOOD_TIL_CANCELLED\'|\'BUY_NOW\'|\'INSTANT\']')
     const requestBody = {marketSymbol,direction,type,quantity,ceiling,limit,timeInForce,clientOrderId,useAwards}
-    const results = await this.request('post','/orders',{requestBody})
+    const results = await this.requestAuth('POST','/orders',{requestBody})
     return this.parseDates(results,['createdAt','updatedAt','closedAt'])
   }
 
@@ -302,7 +302,7 @@ class BittrexClient {
    */
   async getOpenOrders(clientOrderId='open',marketSymbol){
     const requestBody = {marketSymbol}
-    const results = await this.request('get',`/orders/${clientOrderId}`,{requestBody})
+    const results = await this.requestAuth('GET',`/orders/${clientOrderId}`,{requestBody})
     return this.parseDates(results, ['createdAt','updatedAt','closedAt'])
   }
 
@@ -339,7 +339,7 @@ class BittrexClient {
    */
   async cancelOrder(clientOrderId='open',marketSymbol){
     const requestBody = {marketSymbol}
-    const results = this.request('delete',`/orders/${clientOrderId}`,{requestBody})
+    const results = this.requestAuth('DELETE',`/orders/${clientOrderId}`,{requestBody})
     return this.parseDates(results,['createdAt','updatedAt','closedAt'])
   }
 
@@ -378,7 +378,7 @@ class BittrexClient {
    */
   async getOrderHistory({marketSymbol,nextPageToken,previousPageToken,pageSize,startDate,endDate}={}){
     const requestBody = {marketSymbol,nextPageToken,previousPageToken,pageSize,startDate,endDate}
-    const results = await this.request('get','/account/getorderhistory',{requestBody})
+    const results = await this.requestAuth('GET','/account/getorderhistory',{requestBody})
     return this.parseDates(results,['createdAt','updatedAt','closedAt'])
   }
 
@@ -396,7 +396,7 @@ class BittrexClient {
     }
   */
   async balance(currencySymbol){
-    const results = this.request('get',`/balances/${currencySymbol}`)
+    const results = this.requestAuth('GET',`/balances/${currencySymbol}`)
     return this.parseDates(results,['updatedAt'])
   }
 
@@ -413,7 +413,7 @@ class BittrexClient {
   async getNewDepositAddress(currencySymbol){
     if (!currencySymbol) throw new Error('currencySymbol is required')
     const requestBody = {currencySymbol}
-    return this.request('post','/addresses',{requestBody})
+    return this.requestAuth('POST','/addresses',{requestBody})
   }
 
   /**
@@ -427,7 +427,7 @@ class BittrexClient {
     }]
     */
   async getAddresses(currencySymbol){
-    return this.request('get',`/addresses/${currencySymbol}`)
+    return this.requestAuth('GET',`/addresses/${currencySymbol}`)
   }
 
 
@@ -457,7 +457,7 @@ class BittrexClient {
     if (!quantity) throw new Error('quantity is required')
     if (!cryptoAddress) throw new Error('address is required')
     const requestBody = {currencySymbol,quantity,cryptoAddress,cryptoAdressTag,clientWithdrawalId}
-    const results = await this.request('post','/withdrawals',{requestBody})
+    const results = await this.requestAuth('POST','/withdrawals',{requestBody})
     return this.parseDates(results,['createdAt','completedAt'])
   }
 
@@ -483,8 +483,8 @@ class BittrexClient {
   async withdrawalHistory(open=true,{currencySymbol,status}={}){
     const requestBody = {currencySymbol,status}
     let results
-    if (open) results = await this.request('get','/withdrawals/open',{requestBody})
-    else results = await this.request('get','/withdrawals/closed',{requestBody})
+    if (open) results = await this.requestAuth('GET','/withdrawals/open',{requestBody})
+    else results = await this.requestAuth('GET','/withdrawals/closed',{requestBody})
     return this.parseDates(results,['createdAt','completedAt'])
   }
 
@@ -507,7 +507,7 @@ class BittrexClient {
    */
   async cancelWithdrawal(withdrawalId){
     if (!withdrawalId) throw new Error('withdrawalId is required')
-    const results = await this.request('delete',`/withdrawals/${withdrawalId}`)
+    const results = await this.requestAuth('DELETE',`/withdrawals/${withdrawalId}`)
     return this.parseDates(results,['createdAt','completedAt'])
   }
 
@@ -532,65 +532,61 @@ class BittrexClient {
   async depositHistory(pending=false,currencySymbol){
     const requestBody = {currencySymbol}
     let results
-    if (pending) results = await this.request('get','/deposits/open',{requestBody})
-    else results = await this.request('get','/deposits/closed',{requestBody})
+    if (pending) results = await this.requestAuth('GET','/deposits/open',{requestBody})
+    else results = await this.requestAuth('GET','/deposits/closed',{requestBody})
     return this.parseDates(results,['createdAt','completedAt'])
   }
 
   /*-------------------------------------------------------------------------*
    * Private
    *-------------------------------------------------------------------------*/
-
   /**
    * @private
-   * @method request
-   * @param {String} method
-   * @param {String} url
-   * @param {Object} [options.data]
-   * @param {Object} [options.params]
+   * @method request - Simple API Request Method
+   * @param  {String} method
+   * @param  {String} url
+   * @returns {Object}
    */
-  async request(method, url, { headers = {}, params = {} } = {}) {
-    params = this.sanitizeParams(params)
-
-    if (this._apiKey) {
-      params.nonce = ++this._nonce
-      params.apikey = this._apiKey
-      headers.apisign = this.requestSignature(url, params)
-    }
-
-    const { data } = await this._client.request({ method, url, headers, params })
-
-    if (!data.success) {
-      throw new Error(data.message)
-    }
-
+  async request(method,url){
+    const {data} = await this._client.request({method,url})
+    if (!data.success) throw new Error(data.message)
     return data.result
   }
 
-  /**
+   /**
    * @private
-   * @method requestSignature
+   * @method requestAuth - Authenticated API Request Method
+   * @param {String} method
    * @param {String} url
-   * @returns {String}
+   * @param {Object} requestBody
+   * @returns {Object}
    */
-  requestSignature(path, params) {
-    const query = querystring.stringify(params)
-    const url = `${this._client.defaults.baseURL}${path}?${query}`
-    const hmac = crypto.createHmac('sha512', this._apiSecret)
-    return hmac.update(url).digest('hex')
+  async requestAuth(method,url,requestBody={}){
+    const apiKey = this._apiKey
+    const timestamp = Date.now()
+    const content = this.sanitizeRequestBody(requestBody)
+    const contentHash = CryptoJS.SHA512(content).toString(CryptoJS.enc.Hex)
+    const path = `${this._client.baseURL}${url}`
+    const preSign = [timestamp,path,method,contentHash].join('')
+    const signedMessage = CryptoJS.HmacSHA512(preSign,this._apiSecret).toString(CryptoJS.enc.Hex)
+    const headers = {apiKey,timestamp,contentHash,signedMessage}
+    const {data} = await this._client.request({method,path,headers,content})
+    if (!data.success) throw new Error(data.message)
+    return data.result
   }
+
 
   /**
    * @private
-   * @method sanitizeParams
-   * @param {Object} params
+   * @method sanitizerequestBody
+   * @param {Object} requestBody
    * @returns {Object}
    */
-  sanitizeParams(params = {}) {
+  sanitizeRequestBody(requestBody = {}) {
     const obj = {}
-    for (const key of Object.keys(params)) {
-      if (params[key] === undefined) continue
-      obj[key] = params[key]
+    for (const key of Object.keys(requestBody)) {
+      if (requestBody[key] === undefined) continue
+      obj[key] = requestBody[key]
     }
     return obj
   }
