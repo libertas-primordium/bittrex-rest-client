@@ -15,9 +15,13 @@ class BittrexClient {
     this._apiKey = apiKey
     this._apiSecret = apiSecret
     this._nonce = new Date().getTime()
+    this._baseURL = 'https://api.bittrex.com/v3'
     this._client = axios.create({
-      baseURL: 'https://api.bittrex.com/v3',
-      httpsAgent: new https.Agent({ keepAlive })
+      baseURL: this._baseURL,
+      httpsAgent: new https.Agent({ keepAlive }),
+      transformResponse: [function (data) {
+       console.log(data)
+      }]
     })
   }
 
@@ -49,7 +53,7 @@ class BittrexClient {
    */
   async markets(){
     const results = await this.request('GET','/markets')
-    return this.parseDates(results,['createdAt'])
+    return results
   }
 
   /**
@@ -108,7 +112,7 @@ class BittrexClient {
    */
   async marketSummaries(){
     const results = await this.request('GET','/markets/summaries')
-    return this.parseDates(results,['updatedAt'])
+    return results
   }
 
   /**
@@ -127,7 +131,7 @@ class BittrexClient {
   async marketSummary(marketSymbol){
     if (!marketSymbol) throw new Error('marketSymbol is required')
     const results = await this.request('GET',`/markets/${marketSymbol}/summary`)
-    return this.parseDates(results,['updatedAt'])
+    return results
   }
 
   /**
@@ -144,7 +148,7 @@ class BittrexClient {
   async marketTrades(marketSymbol){
     if (!marketSymbol) throw new Error('marketSymbol is required')
     const results = await this.request('GET',`/markets/${marketSymbol}/trades`)
-    return this.parseDates(results,['executedAt'])
+    return results
   }
 
   /**
@@ -191,7 +195,7 @@ class BittrexClient {
     if (!marketSymbol) throw new Error('marketSymbol is required')
     if (!candleInterval) throw new Error('candleInterval is required')
     const results = await this.request('GET',`/markets/${marketSymbol}/candles/${candleType}/${candleInterval}/recent`)
-    return this.parseDates(results,['startsAt'])
+    return results
   }
 
    /**
@@ -213,9 +217,11 @@ class BittrexClient {
     "quoteVolume": "number (double)"
     }]
    */
-  async getCandlesHistorical(marketSymbol,candleInterval,year,month,day,candleType='TRADE'){
+  async getCandlesHistorical(marketSymbol,candleInterval,year,month=1,day=1,candleType='TRADE'){
+    if (!marketSymbol) throw new Error('marketSymbol is required')
+    if (!candleInterval) throw new Error('candleInterval is required')
     const results = await this.request('GET',`/markets/${marketSymbol}/candles/${candleType}/${candleInterval}/historical/${year}/${month}/${day}`)
-    return this.parseDates(results,['startsAt'])
+    return results
   }
 
   /*-------------------------------------------------------------------------*
@@ -270,8 +276,8 @@ class BittrexClient {
     if (type === 'MARKET'|'CEILING_MARKET' && limit) throw new Error('Do not specify limit if type=[\'MARKET\'|\'CEILING_MARKET\']')
     if (timeInForce !== 'GOOD_TIL_CANCELLED'|'IMMEDIATE_OR_CANCEL'|'FILL_OR_KILL'|'POST_ONLY_GOOD_TIL_CANCELLED'|'BUY_NOW'|'INSTANT') throw new Error('timeInForce must be one of: [\'GOOD_TIL_CANCELLED\'|\'IMMEDIATE_OR_CANCEL\'|\'FILL_OR_KILL\'|\'POST_ONLY_GOOD_TIL_CANCELLED\'|\'BUY_NOW\'|\'INSTANT\']')
     const requestBody = {marketSymbol,direction,type,quantity,ceiling,limit,timeInForce,clientOrderId,useAwards}
-    const results = await this.requestAuth('POST','/orders',{requestBody})
-    return this.parseDates(results,['createdAt','updatedAt','closedAt'])
+    const results = await this.requestAuth('POST','/orders',requestBody)
+    return results
   }
 
   /**
@@ -302,8 +308,8 @@ class BittrexClient {
    */
   async getOpenOrders(marketSymbol,clientOrderId='open'){
     const requestBody = {marketSymbol}
-    const results = await this.requestAuth('GET',`/orders/${clientOrderId}`,{requestBody})
-    return this.parseDates(results, ['createdAt','updatedAt','closedAt'])
+    const results = await this.requestAuth('GET',`/orders/${clientOrderId}`,requestBody)
+    return results
   }
 
 
@@ -339,8 +345,8 @@ class BittrexClient {
    */
   async cancelOrder(clientOrderId='open',marketSymbol){
     const requestBody = {marketSymbol}
-    const results = this.requestAuth('DELETE',`/orders/${clientOrderId}`,{requestBody})
-    return this.parseDates(results,['createdAt','updatedAt','closedAt'])
+    const results = this.requestAuth('DELETE',`/orders/${clientOrderId}`,requestBody)
+    return results
   }
 
 
@@ -376,10 +382,10 @@ class BittrexClient {
       }
     }]
    */
-  async getOrderHistory({marketSymbol,nextPageToken,previousPageToken,pageSize,startDate,endDate}={}){
+  async getOrderHistory(marketSymbol,nextPageToken,previousPageToken,pageSize,startDate,endDate){
     const requestBody = {marketSymbol,nextPageToken,previousPageToken,pageSize,startDate,endDate}
-    const results = await this.requestAuth('GET','/account/getorderhistory',{requestBody})
-    return this.parseDates(results,['createdAt','updatedAt','closedAt'])
+    const results = await this.requestAuth('GET','/account/getorderhistory',requestBody)
+    return results
   }
 
 
@@ -395,9 +401,9 @@ class BittrexClient {
     "updatedAt": "string (date-time)"
     }
   */
-  async balance(currencySymbol){
+  async balance(currencySymbol=''){
     const results = this.requestAuth('GET',`/balances/${currencySymbol}`)
-    return this.parseDates(results,['updatedAt'])
+    return results
   }
 
   /**
@@ -413,7 +419,7 @@ class BittrexClient {
   async getNewDepositAddress(currencySymbol){
     if (!currencySymbol) throw new Error('currencySymbol is required')
     const requestBody = {currencySymbol}
-    return this.requestAuth('POST','/addresses',{requestBody})
+    return this.requestAuth('POST','/addresses',requestBody)
   }
 
   /**
@@ -426,7 +432,7 @@ class BittrexClient {
     "cryptoAddressTag": "string"
     }]
     */
-  async getAddresses(currencySymbol){
+  async getAddresses(currencySymbol=''){
     return this.requestAuth('GET',`/addresses/${currencySymbol}`)
   }
 
@@ -457,8 +463,8 @@ class BittrexClient {
     if (!quantity) throw new Error('quantity is required')
     if (!cryptoAddress) throw new Error('address is required')
     const requestBody = {currencySymbol,quantity,cryptoAddress,cryptoAdressTag,clientWithdrawalId}
-    const results = await this.requestAuth('POST','/withdrawals',{requestBody})
-    return this.parseDates(results,['createdAt','completedAt'])
+    const results = await this.requestAuth('POST','/withdrawals',requestBody)
+    return results
   }
 
   /**
@@ -483,9 +489,9 @@ class BittrexClient {
   async withdrawalHistory(open=true,{currencySymbol,status}={}){
     const requestBody = {currencySymbol,status}
     let results
-    if (open) results = await this.requestAuth('GET','/withdrawals/open',{requestBody})
-    else results = await this.requestAuth('GET','/withdrawals/closed',{requestBody})
-    return this.parseDates(results,['createdAt','completedAt'])
+    if (open) results = await this.requestAuth('GET','/withdrawals/open',requestBody)
+    else results = await this.requestAuth('GET','/withdrawals/closed',requestBody)
+    return results
   }
 
   /**
@@ -508,13 +514,13 @@ class BittrexClient {
   async cancelWithdrawal(withdrawalId){
     if (!withdrawalId) throw new Error('withdrawalId is required')
     const results = await this.requestAuth('DELETE',`/withdrawals/${withdrawalId}`)
-    return this.parseDates(results,['createdAt','completedAt'])
+    return results
   }
 
   /**
    * @method depositHistory - Retrieve list of deposts. Can filter by pending|completed or by currencySymbol. Returns an array of Deposit objects.
-   * @param {Boolean} pending=false - Optional. true will return pending deposits. false will return completed deposits.
    * @param {String} [currencySymbol] - Optional. Example: 'BTC'
+   * @param {Boolean} pending=false - Optional. true will return pending deposits. false will return completed deposits.
    * @returns {Promise} - [{
     "id": "string (uuid)",
     "currencySymbol": "string",
@@ -529,13 +535,12 @@ class BittrexClient {
     "source": "string"
     }]
    */
-  async depositHistory(pending=false,currencySymbol){
-    const requestBody = {currencySymbol}
+  async depositHistory(currencySymbol,pending=false){
     let results
-    if (pending) results = await this.requestAuth('GET','/deposits/open',{requestBody})
-    else results = await this.requestAuth('GET','/deposits/closed',{requestBody})
-    return this.parseDates(results,['createdAt','completedAt'])
-  }
+    if (pending) results = await this.requestAuth('GET','/deposits/open',{currencySymbol})
+  else results = await this.requestAuth('GET','/deposits/closed',{currencySymbol})
+  return results
+}
 
   /*-------------------------------------------------------------------------*
    * Private
@@ -547,9 +552,13 @@ class BittrexClient {
    * @param  {String} url
    * @returns {Object}
    */
-  async request(method,url){
-    const {data} = await this._client.request({method,url})
+  async request(method,url,requestBody){
+    console.log(requestBody)
+    const params = this.sanitizeRequestBody(requestBody)
+    console.log(params)
+    const {data} = await this._client.request({method,url,params})
     if (!data) throw new Error('No Response')
+    console.log(data)
     return data
   }
 
@@ -561,17 +570,30 @@ class BittrexClient {
    * @param {Object} requestBody
    * @returns {Object}
    */
-  async requestAuth(method,url,requestBody={}){
+  async requestAuth(method,url,requestBody){
     const apiKey = this._apiKey
     const timestamp = new Date().getTime()
-    const content = this.sanitizeRequestBody(requestBody)
-    const contentHash = CryptoJS.SHA512(`${content}`).toString(CryptoJS.enc.Hex)
-    const path = `${this._client.baseURL}${url}`
+    console.log(requestBody)
+    const params = this.sanitizeRequestBody(requestBody)
+    console.log(params)
+    let contentHash = CryptoJS.SHA512('').toString(CryptoJS.enc.Hex)
+    if (Object.values(params)[0]){
+      contentHash = CryptoJS.SHA512({params}).toString(CryptoJS.enc.Hex)
+      console.log(Object.values(params)[0])
+    }
+    const path = `${this._baseURL}${url}`
     const preSign = [timestamp,path,method,contentHash].join('')
     const signedMessage = CryptoJS.HmacSHA512(preSign,this._apiSecret).toString(CryptoJS.enc.Hex)
-    const headers = {apiKey,timestamp,contentHash,signedMessage}
-    const {data} = await this._client.request({method,url,headers,content})
+    const headers = {
+      'Api-Key': apiKey,
+      'Api-Timestamp': timestamp,
+      'Api-Content-Hash': contentHash,
+      'Api-Signature': signedMessage
+    }
+    // const payload =
+    const {data} = await this._client.request({url,method,headers,params})
     if (!data) throw new Error('No Response')
+    console.log(data)
     return data
   }
 
@@ -590,31 +612,5 @@ class BittrexClient {
     }
     return obj
   }
-
-  /**
-   * @private
-   * @method parseDates
-   * @param {Array<Object>} results
-   * @param {Array<String>} keys
-   * @returns {Array<Object>}
-   */
-  parseDates(results, keys) {
-    // if (results.length>=1){ //because otherwise the outer for-loop returns typeError 'results is not iterable' if we pass a single object to parse dates on instead of an array of objects.
-    //   for (const result of results) {
-    //     for (const key of keys) {
-    //       if (!result[key]) continue
-    //       result[key] = new Date(`${result[key]}Z`)
-    //     }
-    //   }
-    // }
-    // else{
-    //   for (const key of keys) {
-    //     if (!results[key]) continue
-    //     results[key] = new Date(`${results[key]}Z`)
-    //   }
-    // }
-    return results
-  }
-}
 
 module.exports = BittrexClient
