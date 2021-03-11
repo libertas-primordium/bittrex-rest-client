@@ -3,7 +3,8 @@ const { BittrexClient } = require('../')
 require('dotenv').config()
 const client = new BittrexClient({
   apiKey: process.env.KEY,
-  apiSecret: process.env.SECRET})
+  apiSecret: process.env.SECRET,
+  timeout: 3000})
 describe('bittrex-node', () => {
   describe('non-authenticated API calls', () => {
     xit('should get markets', async () => {
@@ -72,25 +73,30 @@ describe('bittrex-node', () => {
   xdescribe('authenticated trading API calls', () => {
     let buyOrderId
 
-    it('should get open orders', async () => {
+    xit('should get open orders', async () => {
       let results = await client.getOpenOrders()
       should.exist(results)
       results.length.should.be.aboveOrEqual(0)
     })
 
-    it('should place a buy limit order', async () => {
-      let { uuid } = await client.buyLimit('BTC-ETH', { quantity: 50000, rate: 0.0000001 })
-      should.exist(uuid)
-      buyOrderId = uuid
+    it('should place a buy market order', async () => {
+      try {
+        let result = await client.sendOrder('BTC-USD', 'BUY', 'MARKET', { quantity:5000 })
+        should.not.exist(result)
+      } catch(err) {
+        should.exist(err)
+        err.message.should.equal('{"code":"INSUFFICIENT_FUNDS"}')
+      }
+
     })
 
-    it('should cancel an order', async () => {
+    xit('should cancel an order', async () => {
       await client.cancelOrder(buyOrderId)
     })
 
-    it('should attempt a sell limit order', async () => {
+    xit('should attempt a sell limit order', async () => {
       try {
-        let result = await client.sellLimit('BTC-ETH', { quantity: 50000, rate: 0.0000001 })
+        let result = await client.sellLimit('BTC-USD', { quantity: 500000 })
         should.not.exist(result)
       } catch(err) {
         should.exist(err)
@@ -100,7 +106,7 @@ describe('bittrex-node', () => {
   })
 
   describe('authenticated account API calls', () => {
-    xit('should get balances', async () => {
+    it('should get balances', async () => {
       let results = await client.balance('')
       should.exist(results)
       results.length.should.be.aboveOrEqual(0)
@@ -120,7 +126,7 @@ describe('bittrex-node', () => {
       should.exist(Address)
     })
 
-    xit('should get order history', async () => {
+    it('should get order history', async () => {
       let results = await client.getOrderHistory('BTC-USD')
       should.exist(results)
       results.length.should.be.aboveOrEqual(0)
@@ -132,7 +138,7 @@ describe('bittrex-node', () => {
       results.length.should.be.aboveOrEqual(0)
     })
 
-    it('should get deposit history', async () => {
+    xit('should get deposit history', async () => {
       let results = await client.depositHistory('BTC')
       should.exist(results)
       results.length.should.be.aboveOrEqual(0)

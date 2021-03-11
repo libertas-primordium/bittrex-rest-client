@@ -23,7 +23,8 @@
   "dependencies": {
     "axios": "^0.21.1",
     "crypto-js": "^4.0.0",
-    "dotenv": "^8.2.0"
+    "dotenv": "^8.2.0",
+    "uuid-random": "^1.3.2"
   },
   "devDependencies": {
     "eslint": "5.16.0",
@@ -32,6 +33,6 @@
   },
   "scripts": {
     "lint": "npx eslint ./",
-    "test": "npx mocha --exit --bail --slow 500 --timeout 5000 ./test"
+    "test": "npx mocha --slow 500 --timeout 5000 ./test"
   }
 }
