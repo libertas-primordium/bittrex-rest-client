@@ -1,8 +1,8 @@
 {
   "name": "bittrex-node",
   "version": "1.2.1",
-  "description": "Bittrex API client for Node.js",
-  "author": "Andrew Barba <abarba.77@gmail.com>",
+  "description": "Bittrex RestAPI client for Node.js",
+  "author": "libertas-primordium@github",
   "license": "MIT",
   "main": "src/index.js",
   "engines": {
@@ -18,7 +18,7 @@
     "https"
   ],
   "repository": {
-    "url": "https://github.com/AndrewBarba/bittrex-node"
+    "url": "https://github.com/libertasprimordium/bittrex-rest-client"
   },
   "dependencies": {
     "axios": "^0.21.1",

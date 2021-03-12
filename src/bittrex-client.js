@@ -1,7 +1,6 @@
 const axios = require('axios')
 const CryptoJS = require('crypto-js')
 const https = require('https')
-const querystring = require('querystring')
 const uuid = require('uuid-random')
 require('dotenv').config()
 
@@ -22,15 +21,8 @@ class BittrexClient {
     this._client = axios.create({
       baseURL: this._baseURL,
       httpsAgent: new https.Agent({ keepAlive }),
-      timeout: timeout,
-      transformResponse: (data => { // Uncomment this to break axios error handling and dump raw response to console for debugging.
-        const response = data
-        if (!response.data) throw new Error(data)
-        return response
-
-      })
+      timeout: timeout
     })
-
   }
 
   /*-------------------------------------------------------------------------*
@@ -274,7 +266,7 @@ class BittrexClient {
    */
   async sendOrder(marketSymbol,direction,type,{quantity,ceiling,limit}={},timeInForce='IMMEDIATE_OR_CANCEL',clientOrderId=uuid(),useAwards=false){
     if (!marketSymbol) throw new Error('marketSymbol is required')
-    if (['BUY','SELL'].indexOf(direction)) throw new Error('direction must be either \'BUY\' or \'SELL\'')
+    if (['BUY','SELL'].indexOf(direction) === -1) throw new Error('direction must be either \'BUY\' or \'SELL\'')
     if (['LIMIT','MARKET','CEILING_LIMIT','CEILING_MARKET'].indexOf(type) === -1) throw new Error('type must be either: [\'LIMIT\'|\'MARKET\'|\'CEILING_LIMIT\'|\'CEILING_MARKET\']')
     if (['LIMIT','MARKET'].indexOf(type) >= 0 && !quantity) throw new Error('quantity must be included if type=[\'MARKET\'|\'LIMIT\']')
     if (['LIMIT','MARKET'].indexOf(type) >= 0 && ceiling) throw new Error('Do not specify ceiling if type=[\'MARKET\'|\'LIMIT\']')
@@ -467,12 +459,12 @@ class BittrexClient {
     "clientWithdrawalId": "string (uuid)"
     }
    */
-  async requestWithdrawal(currencySymbol,quantity,cryptoAddress,{cryptoAdressTag,clientWithdrawalId}={}){
+  async requestWithdrawal(currencySymbol,quantity,cryptoAddress,{cryptoAdressTag,clientWithdrawalId=uuid()}={}){
     if (!currencySymbol) throw new Error('currencySymbol is required')
     if (!quantity) throw new Error('quantity is required')
     if (!cryptoAddress) throw new Error('address is required')
-    const query = {currencySymbol,quantity,cryptoAddress,cryptoAdressTag,clientWithdrawalId}
-    const results = await this.requestAuth('POST','/withdrawals',query)
+    const requestBody = {currencySymbol,quantity,cryptoAddress,cryptoAdressTag,clientWithdrawalId}
+    const results = await this.requestAuth('POST','/withdrawals','',requestBody)
     return results
   }
 
@@ -579,15 +571,12 @@ class BittrexClient {
   async requestAuth(method,url,query,requestBody){
     const apiKey = this._apiKey
     const timestamp = new Date().getTime()
-    const params = querystring.stringify(this.sanitize(query))
+    const {params} = this.sanitize(query)
     const data = this.sanitize(requestBody)
-
     let contentHash = CryptoJS.SHA512('').toString(CryptoJS.enc.Hex)
     if (method==='POST') contentHash = CryptoJS.SHA512(JSON.stringify(data)).toString(CryptoJS.enc.Hex)
-
     let path = url
     if (params) path = `${url}?${params}`
-
     const uri = `${this._baseURL}${path}`
     const preSign = [timestamp,uri,method,contentHash].join('')
     const signedMessage = CryptoJS.HmacSHA512(preSign,this._apiSecret).toString(CryptoJS.enc.Hex)
@@ -597,26 +586,18 @@ class BittrexClient {
       'Api-Content-Hash': contentHash,
       'Api-Signature': signedMessage
     }
-
     let payload = {method,url,headers,params}
-    if (params) payload = {method,path,headers,params}
-
     let response = {}
-
     if (method==='POST'){
       payload = {method,headers}
       response = await this._client.post(uri,data,payload)
       return response.data
     }
-
     else{
     response = await this._client.request(payload)
     return response.data
     }
-
-
   }
-
 
   /**
    * @private
@@ -633,4 +614,5 @@ class BittrexClient {
     return obj
   }
 }
+
 module.exports = BittrexClient
