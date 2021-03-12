@@ -1,5 +1,5 @@
 
-# bittrex-restAPI-client
+# bittrex-rest-client
 _Forked from Andrew Barba's [bittrex-node](https://github.com/AndrewBarba/bittrex-node)_
 
 ## A full-featured Bittrex v3 REST-API client for Node.js
