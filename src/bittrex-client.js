@@ -17,7 +17,6 @@ class BittrexClient {
     this._apiSecret = apiSecret
     this._nonce = new Date().getTime()
     this._baseURL = 'https://api.bittrex.com/v3'
-    // this.defaults.headers.post['Content-Type'] = 'application/json'
     this._client = axios.create({
       baseURL: this._baseURL,
       httpsAgent: new https.Agent({ keepAlive }),
