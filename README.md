@@ -1,65 +1,86 @@
-# bittrex-node
+# bittrex-restAPI-client
+_Forked from Andrew Barba's [bittrex-node](https://github.com/AndrewBarba/bittrex-node)_
 
-[![wercker status](https://app.wercker.com/status/feb7e7d87d5a4a29ea9c04b4a1350a44/s/master "wercker status")](https://app.wercker.com/project/byKey/feb7e7d87d5a4a29ea9c04b4a1350a44)
-[![Twitter](https://img.shields.io/badge/twitter-@andrew_barba-blue.svg?style=flat)](http://twitter.com/andrew_barba)
+## A full-featured Bittrex v3 REST-API client for Node.js
 
-A full-featured Bittrex API client for Node.js
-
-- [x] Supports all documented v1.1 endpoints
+- [x] Upgraded to Bittrex v3 API specification
+- [x] Now includes methods for fetching chart candles via REST API
 - [x] 100% unit-test coverage
 - [x] Heavily documented
 - [x] Promise based with async/await
+- [x] All public methods have thorough JSdoc comments for quick reference and parameter auto-fill in modern code editors.
 
-If you're using the Bittrex REST API, I can assure you this is the only library worth using. Here's why:
-
-- It doesn't make you parse the Bittrex response and look for errors
-- It properly parses all timestamps to JavaScript Date objects
-- It uses proper JavaScript and Node conventions
-- It throws proper errors when parameters are missing
-- It uses a single https client with Keep-Alive enabled
-- It's faster than every other node Bittrex library
+I think I've included all of the functionality that most traders and developers will need, but if there is a particular API endpoint that I have overlooked which you need, open a new issue and I will add it.
 
 ## Initialize Client
 
 ```javascript
-const { BittrexClient } = require('bittrex-node')
+const { BittrexClient } = require('bittrex-rest-client')
 
-let client = new BittrexClient({
-  apiKey: '12345',
-  apiSecret: 'abcde'
-})
+const client = new BittrexClient({
+  apiKey: process.env.KEY,
+  apiSecret: process.env.SECRET,
+  timeout: 3000
+  })
 ```
 
-## Public Methods
+## Public Requests
 
 ```javascript
-await client.markets()
-await client.currencies()
-await client.ticker('BTC-ETH')
-await client.marketSummaries()
-await client.marketSummary('BTC-ETH')
-await client.marketHistory('BTC-ETH')
-await client.orderBook('BTC-ETH', { type: 'both' })
+await client.markets() //List all available markets on the exchange.
+await client.currencies() //List all available currencies on the exchange.
+await client.ticker(marketSymbol) //Get current ticker quote.
+await client.marketSummaries() //List 24-hour summaries for all available markets.
+await client.marketSummary() //Get 24-hour summary for specified market.
+await client.marketTrades(marketSymbol) //Get list of most recently executed trades for specified market.
+await client.orderBook(marketSymbol,depth=25)//Get orderbook for specified market.
+await client.getCandlesRecent(marketSymbol,candleInterval,candleType='TRADE') //Retrieve most recent candles for specified market.
+await client.getCandlesHistorical(marketSymbol,candleInterval,year,month=1,day=1,candleType='TRADE') //Retrieve candles from historical period for specified market.
 ```
-
-## Market Methods
+## Trading
 
 ```javascript
-await client.buyLimit('BTC-ETH', { quantity: 2.1, price: 0.1 })
-await client.sellLimit('BTC-ETH', { quantity: 2.1, price: 0.1 })
-await client.cancelOrder('1234-5678')
-await client.openOrders('BTC-ETH')
+await client.sendOrder(marketSymbol,direction,type,{quantity,ceiling,limit}={},timeInForce='IMMEDIATE_OR_CANCEL',clientOrderId=uuid(),useAwards=false) // Send a new order to the exchange.
+await client.getOpenOrders(marketSymbol)//List open orders.
+await client.cancelOrder(clientOrderId,marketSymbol) //Cancel an open order.
+await client.getOrderHistory(marketSymbol,nextPageToken,previousPageToken,pageSize,startDate,endDate) //Retrieve a list of closed orders.
 ```
 
-## Account Methods
+## Account Management
 
 ```javascript
-await client.balances()
-await client.balance('BTC')
-await client.depositAddress('BTC')
-await client.withdraw('BTC', { quantity: 1.2, address: 'abcde' })
-await client.order('30594e6e-ba54-4914-96f3-5b9d5de2468e')
-await client.orderHistory('BTC-ETH')
-await client.withdrawalHistory('BTC')
-await client.depositHistory('BTC')
+await client.balances(currencySymbol) //Retrieve current balance for specified currencySymbol or a list of all balances.
+await client.getNewDepositAddress(currencySymbol) //Request new deposit address.
+await client.getaddresses(currencySymbol) //retrieve deposit address for specified currency or all currencies.
+await client.withdrawalHistory(open,{currencySymbol,status}) //Get list of withdrawals.
+await client.depositHistory(currencySymbol,pending) //Get list of deposits.
+await client.requestWithdrawal(currencySymbol,quantity,cryptoAddress,{cryptoAdressTag,clientWithdrawalId}) // Request a new withdrawal
+await client.cancelWithdrawal(withdrawalId) //Cancel a pending withdrawal request.
 ```
+
+## Note on testing
+**Be careful testing on a live account.**
+All tests will pass assuming a valid API key/secret with all permissions enabled. The trading method is tested in a manner that will not result in trades being filled. **The withdrawal method attempts to make a 50BTC withdrawal, and expects to receive an 'INSUFFICIENT_FUNDS' error.**
+
+## Licence
+This software is made available under the MIT licence.
+
+Copyright (c) 2021 libertas-primordium
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

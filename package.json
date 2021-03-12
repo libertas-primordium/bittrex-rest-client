@@ -1,5 +1,5 @@
 {
-  "name": "bittrex-node",
+  "name": "bittrex-rest-client",
   "version": "1.2.1",
   "description": "Bittrex RestAPI client for Node.js",
   "author": "libertas-primordium@github",
@@ -18,7 +18,7 @@
     "https"
   ],
   "repository": {
-    "url": "https://github.com/libertasprimordium/bittrex-rest-client"
+    "url": "https://github.com/libertasprimordium/bittrex-restAPI-client"
   },
   "dependencies": {
     "axios": "^0.21.1",
