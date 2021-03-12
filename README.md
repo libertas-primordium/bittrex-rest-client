@@ -13,7 +13,19 @@ _Forked from Andrew Barba's [bittrex-node](https://github.com/AndrewBarba/bittre
 - [x] All public methods have thorough JSdoc comments for quick reference and parameter auto-fill in modern code editors.
 
 I think I've included all of the functionality that most traders and developers will need, but if there is a particular API endpoint that I have overlooked which you need, open a new issue and I will add it.
+___
+Nobody paid me to do this, so if my work saves you time or money, consider sending a tip!
 
+BTC: 1EHkFQBk9LB2Zm3RcP7EeVLqUUDaEFpNxx
+
+LTC: Lht9v7E9bxPMAmU2TUeVx2SJZu2AW32LSW
+
+ETH: 0xaba31e526ca98a2a659d69b30adc2da8f3eaaa2d
+
+DOGE: DC8xePEAyC2PeGQUqF51abrF8m7BMuVVoS
+
+XMR: 41tnfGBpCt527q9aqdAjU914gcyJ8Fk2K9vGHHxswgF1hPgouanA2WFbQKimLBMt3zESnkuBWcn29NMiVAC1k4CxRMAdqB6
+___
 ## Initialize Client
 
 ```javascript
