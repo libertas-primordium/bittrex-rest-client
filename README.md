@@ -1,7 +1,9 @@
+
 # bittrex-restAPI-client
 _Forked from Andrew Barba's [bittrex-node](https://github.com/AndrewBarba/bittrex-node)_
 
 ## A full-featured Bittrex v3 REST-API client for Node.js
+
 
 - [x] Upgraded to Bittrex v3 API specification
 - [x] Now includes methods for fetching chart candles via REST API
