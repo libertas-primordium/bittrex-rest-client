@@ -28,13 +28,20 @@ XMR: 41tnfGBpCt527q9aqdAjU914gcyJ8Fk2K9vGHHxswgF1hPgouanA2WFbQKimLBMt3zESnkuBWcn
 ___
 ## Initialize Client
 
+This package is now available as an NPM module, and can be added to your project with:
+```bash
+$ npm install bittrex-rest-client
+```
+Then call it in your code as a dependency:
 ```javascript
 const { BittrexClient } = require('bittrex-rest-client')
-
+```
+And initialize a new instance:
+```javascript
 const client = new BittrexClient({
-  apiKey: process.env.KEY,
+  apiKey: process.env.KEY, // pass API creds from .env file in project directory
   apiSecret: process.env.SECRET,
-  timeout: 3000
+  timeout: 3000 // Optional, specify timeout for web requests, in milliseconds.
   })
 ```
 
