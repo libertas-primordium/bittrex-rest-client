@@ -581,15 +581,15 @@ class BittrexClient {
     const timestamp = new Date().getTime()
     const params = querystring.stringify(this.sanitize(query))
     const data = this.sanitize(requestBody)
-    let contentHash = CryptoJS.SHA512('').toString(CryptoJS.enc.Hex)
 
+    let contentHash = CryptoJS.SHA512('').toString(CryptoJS.enc.Hex)
     if (method==='POST') contentHash = CryptoJS.SHA512(JSON.stringify(data)).toString(CryptoJS.enc.Hex)
 
     let path = url
     if (params) path = `${url}?${params}`
 
     const uri = `${this._baseURL}${path}`
-    const preSign = [timestamp,uri,method,contentHash,''].join('')
+    const preSign = [timestamp,uri,method,contentHash].join('')
     const signedMessage = CryptoJS.HmacSHA512(preSign,this._apiSecret).toString(CryptoJS.enc.Hex)
     const headers = {
       'Api-Key': apiKey,
@@ -597,15 +597,18 @@ class BittrexClient {
       'Api-Content-Hash': contentHash,
       'Api-Signature': signedMessage
     }
-    let payload = {method,url,headers,params}
-    // if (params) payload = {method,path,headers,params}
-    let response = {}
-    if (method==='POST'){
 
+    let payload = {method,url,headers,params}
+    if (params) payload = {method,path,headers,params}
+
+    let response = {}
+
+    if (method==='POST'){
       payload = {method,headers}
       response = await this._client.post(uri,data,payload)
       return response.data
     }
+
     else{
     response = await this._client.request(payload)
     return response.data

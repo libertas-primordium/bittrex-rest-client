@@ -70,7 +70,7 @@ describe('bittrex-node', () => {
     })
   })
 
-  xdescribe('authenticated trading API calls', () => {
+  describe('authenticated trading API calls', () => {
     let buyOrderId
 
     xit('should get open orders', async () => {
@@ -106,7 +106,7 @@ describe('bittrex-node', () => {
   })
 
   describe('authenticated account API calls', () => {
-    it('should get balances', async () => {
+    xit('should get balances', async () => {
       let results = await client.balance('')
       should.exist(results)
       results.length.should.be.aboveOrEqual(0)
@@ -121,7 +121,7 @@ describe('bittrex-node', () => {
       allAddresses.length.should.be.aboveOrEqual(0)
     })
 
-    xit('should create a deposit address', async () => {
+    it('should create a deposit address', async () => {
       let Address = await client.getAddresses('BTC')
       should.exist(Address)
     })
@@ -138,7 +138,7 @@ describe('bittrex-node', () => {
       results.length.should.be.aboveOrEqual(0)
     })
 
-    xit('should get deposit history', async () => {
+    it('should get deposit history', async () => {
       let results = await client.depositHistory('BTC')
       should.exist(results)
       results.length.should.be.aboveOrEqual(0)
