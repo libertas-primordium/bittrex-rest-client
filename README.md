@@ -74,7 +74,7 @@ await client.cancelWithdrawal(withdrawalId) //Cancel a pending withdrawal reques
 
 ## Note on testing
 **Be careful testing on a live account.**
-All tests will pass assuming a valid API key/secret with all permissions enabled. The trading method is tested in a manner that will not result in trades being filled. **The withdrawal method attempts to make a 50BTC withdrawal, and expects to receive an 'INSUFFICIENT_FUNDS' error.**
+All tests will pass assuming a valid API key/secret with all permissions enabled. The trading method is tested in a manner that will not result in trades being filled. **The withdrawal method attempts to make a 50BTC withdrawal, and expects to receive an 'INSUFFICIENT_FUNDS' error.** You can change the test paramaters of course in test/index.js.
 
 ## Licence
 This software is made available under the MIT licence.
