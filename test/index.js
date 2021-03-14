@@ -1,10 +1,12 @@
 const should = require('should')
 const { BittrexClient } = require('../')
 require('dotenv').config()
+
 const client = new BittrexClient({
   apiKey: process.env.KEY,
   apiSecret: process.env.SECRET,
   timeout: 3000})
+
 describe('bittrex-node', () => {
   describe('non-authenticated API calls', () => {
     it('should get markets', async () => {

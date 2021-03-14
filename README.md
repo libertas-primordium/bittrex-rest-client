@@ -11,8 +11,10 @@ _Forked from Andrew Barba's [bittrex-node](https://github.com/AndrewBarba/bittre
 - [x] Heavily documented
 - [x] Promise based with async/await
 - [x] All public methods have thorough JSdoc comments for quick reference and parameter auto-fill in modern code editors.
-
+___
 I think I've included all of the functionality that most traders and developers will need, but if there is a particular API endpoint that I have overlooked which you need, open a new issue and I will add it.
+___
+There are no plans to incorporate the websocket API into this repository, as the REST API has use cases beyond trading.
 ___
 Nobody paid me to do this, so if my work saves you time or money, consider sending a tip!
 
@@ -86,6 +88,7 @@ All tests will pass assuming a valid API key/secret with all permissions enabled
 ## Licence
 This software is made available under the MIT licence.
 
+Copyright (c) 2018 AndrewBarba
 Copyright (c) 2021 libertas-primordium
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
