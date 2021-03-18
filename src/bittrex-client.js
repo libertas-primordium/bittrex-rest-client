@@ -589,11 +589,21 @@ class BittrexClient {
     let response = {}
     if (method==='POST'){
       payload = {method,headers}
-      response = await this._client.post(uri,data,payload)
+      try{
+        response = await this._client.post(uri,data,payload)
+      }
+      catch(error){
+        throw new Error(error)
+      }
       return response.data
     }
     else{
-    response = await this._client.request(payload)
+      try{
+        response = await this._client.request(payload)
+      }
+      catch(error){
+        throw new Error(error)
+      }
     return response.data
     }
   }
