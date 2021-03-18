@@ -1,6 +1,6 @@
 {
   "name": "bittrex-rest-client",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "Bittrex RestAPI client for Node.js",
   "author": "libertas-primordium@github",
   "license": "MIT",
