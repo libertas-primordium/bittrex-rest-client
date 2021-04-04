@@ -2,7 +2,8 @@
 # bittrex-rest-client
 _Forked from Andrew Barba's [bittrex-node](https://github.com/AndrewBarba/bittrex-node)_
 ___
-## A full-featured Bittrex v3 REST-API client for Node.js
+## Description:
+### A full-featured Bittrex v3 REST-API client for Node.js
 
 
 - [x] Upgraded to Bittrex v3 API specification
@@ -16,7 +17,8 @@ I think I've included all of the functionality that most traders and developers 
 ___
 There are no plans to incorporate the websocket API into this repository, as the REST API has use cases beyond trading.
 ___
-## Initialize Client
+## Usage:
+### Initialize Client
 
 This package is now available as an NPM module, and can be added to your project with:
 ```bash
@@ -35,7 +37,7 @@ const client = new BittrexClient({
   })
 ```
 ___
-## Public Requests
+### Public Requests
 
 ```javascript
 await client.markets() //List all available markets on the exchange.
@@ -48,7 +50,7 @@ await client.orderBook(marketSymbol,depth=25)//Get orderbook for specified marke
 await client.getCandlesRecent(marketSymbol,candleInterval,candleType='TRADE') //Retrieve most recent candles for specified market.
 await client.getCandlesHistorical(marketSymbol,candleInterval,year,month=1,day=1,candleType='TRADE') //Retrieve candles from historical period for specified market.
 ```
-## Trading
+### Trading
 
 ```javascript
 await client.sendOrder(marketSymbol,direction,type,{quantity,ceiling,limit}={},timeInForce='IMMEDIATE_OR_CANCEL',clientOrderId=uuid(),useAwards=false) // Send a new order to the exchange.
@@ -57,7 +59,7 @@ await client.cancelOrder(clientOrderId,marketSymbol) //Cancel an open order.
 await client.getOrderHistory(marketSymbol,nextPageToken,previousPageToken,pageSize,startDate,endDate) //Retrieve a list of closed orders.
 ```
 
-## Account Management
+### Account Management
 
 ```javascript
 await client.balances(currencySymbol) //Retrieve current balance for specified currencySymbol or a list of all balances.
@@ -69,7 +71,7 @@ await client.requestWithdrawal(currencySymbol,quantity,cryptoAddress,{cryptoAdre
 await client.cancelWithdrawal(withdrawalId) //Cancel a pending withdrawal request.
 ```
 ___
-## Note on testing
+### Note on testing
 **Be careful testing on a live account.**
 All tests will pass assuming a valid API key/secret with all permissions enabled. The trading method is tested in a manner that will not result in trades being filled. **The withdrawal method attempts to make a 50BTC withdrawal, and expects to receive an 'INSUFFICIENT_FUNDS' error.** You can change the test paramaters of course in test/index.js.
 ___
