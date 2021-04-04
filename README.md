@@ -1,7 +1,7 @@
 
 # bittrex-rest-client
 _Forked from Andrew Barba's [bittrex-node](https://github.com/AndrewBarba/bittrex-node)_
-
+___
 ## A full-featured Bittrex v3 REST-API client for Node.js
 
 
@@ -15,18 +15,6 @@ ___
 I think I've included all of the functionality that most traders and developers will need, but if there is a particular API endpoint that I have overlooked which you need, open a new issue and I will add it.
 ___
 There are no plans to incorporate the websocket API into this repository, as the REST API has use cases beyond trading.
-___
-Nobody paid me to do this, so if my work saves you time or money, consider sending a tip!
-
-BTC: 1EHkFQBk9LB2Zm3RcP7EeVLqUUDaEFpNxx
-
-LTC: Lht9v7E9bxPMAmU2TUeVx2SJZu2AW32LSW
-
-ETH: 0xaba31e526ca98a2a659d69b30adc2da8f3eaaa2d
-
-DOGE: DC8xePEAyC2PeGQUqF51abrF8m7BMuVVoS
-
-XMR: 41tnfGBpCt527q9aqdAjU914gcyJ8Fk2K9vGHHxswgF1hPgouanA2WFbQKimLBMt3zESnkuBWcn29NMiVAC1k4CxRMAdqB6
 ___
 ## Initialize Client
 
@@ -46,7 +34,7 @@ const client = new BittrexClient({
   timeout: 3000 // Optional, specify timeout for web requests, in milliseconds.
   })
 ```
-
+___
 ## Public Requests
 
 ```javascript
@@ -80,15 +68,29 @@ await client.depositHistory(currencySymbol,pending) //Get list of deposits.
 await client.requestWithdrawal(currencySymbol,quantity,cryptoAddress,{cryptoAdressTag,clientWithdrawalId}) // Request a new withdrawal
 await client.cancelWithdrawal(withdrawalId) //Cancel a pending withdrawal request.
 ```
-
+___
 ## Note on testing
 **Be careful testing on a live account.**
 All tests will pass assuming a valid API key/secret with all permissions enabled. The trading method is tested in a manner that will not result in trades being filled. **The withdrawal method attempts to make a 50BTC withdrawal, and expects to receive an 'INSUFFICIENT_FUNDS' error.** You can change the test paramaters of course in test/index.js.
+___
+Nobody paid me to do this, so if my work saves you time or money, consider sending a tip!
+```
 
+BTC: 1EHkFQBk9LB2Zm3RcP7EeVLqUUDaEFpNxx
+
+LTC: Lht9v7E9bxPMAmU2TUeVx2SJZu2AW32LSW
+
+ETH: 0xaba31e526ca98a2a659d69b30adc2da8f3eaaa2d
+
+DOGE: DC8xePEAyC2PeGQUqF51abrF8m7BMuVVoS
+
+XMR: 41tnfGBpCt527q9aqdAjU914gcyJ8Fk2K9vGHHxswgF1hPgouanA2WFbQKimLBMt3zESnkuBWcn29NMiVAC1k4CxRMAdqB6
+```
+---
 ## Licence
 This software is made available under the MIT licence.
 
-Copyright (c) 2018 AndrewBarba
+Copyright (c) 2018 AndrewBarba;
 Copyright (c) 2021 libertas-primordium
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
