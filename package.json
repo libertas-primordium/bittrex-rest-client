@@ -18,7 +18,7 @@
     "https"
   ],
   "repository": {
-    "url": "git+https://github.com/libertasprimordium/bittrex-rest-client.git"
+    "url": "git+https://github.com/libertas-primordium/bittrex-rest-client.git"
   },
   "dependencies": {
     "axios": "^0.21.1",
@@ -36,9 +36,9 @@
     "test": "npx mocha --slow 500 --timeout 5000 ./test"
   },
   "bugs": {
-    "url": "https://github.com/libertasprimordium/bittrex-rest-client/issues"
+    "url": "https://github.com/libertas-primordium/bittrex-rest-client/issues"
   },
-  "homepage": "https://github.com/libertasprimordium/bittrex-rest-client#readme",
+  "homepage": "https://github.com/libertas-primordium/bittrex-rest-client#readme",
   "directories": {
     "test": "test"
   }
