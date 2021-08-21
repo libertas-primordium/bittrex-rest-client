@@ -269,11 +269,11 @@ class BittrexClient {
     if (['LIMIT','MARKET','CEILING_LIMIT','CEILING_MARKET'].indexOf(type) === -1) throw new Error('type must be either: [\'LIMIT\'|\'MARKET\'|\'CEILING_LIMIT\'|\'CEILING_MARKET\']')
     if (['LIMIT','MARKET'].indexOf(type) >= 0 && !quantity) throw new Error('quantity must be included if type=[\'MARKET\'|\'LIMIT\']')
     if (['LIMIT','MARKET'].indexOf(type) >= 0 && ceiling) throw new Error('Do not specify ceiling if type=[\'MARKET\'|\'LIMIT\']')
-    if (['CIELING_LIMIT','CIELING_MARKET'].indexOf(type) >=0 && !ceiling) throw new Error('ceiling must be included if type=[\'CEILING_MARKET\'|\'CEILING_LIMIT\']')
-    if (['CIELING_LIMIT','CIELING_MARKET'].indexOf(type) >=0 && quantity) throw new Error('Do not specify quantity if type=[\'CEILING_MARKET\'|\'CEILING_LIMIT\']')
-    if (['CIELING_LIMIT','LIMIT'].indexOf(type) >=0 && !limit) throw new Error('limit must be included if type=[\'LIMIT\'|\'CEILING_LIMIT\']')
-    if (['MARKET','CIELING_MARKET'].indexOf(type) >=0 && limit) throw new Error('Do not specify limit if type=[\'MARKET\'|\'CEILING_MARKET\']')
-    if (['MARKET','CIELING_MARKET'].indexOf(type) === -1 && !timeInForce) timeInForce = 'GOOD_TIL_CANCELLED'
+    if (['CEILING_LIMIT','CEILING_MARKET'].indexOf(type) >=0 && !ceiling) throw new Error('ceiling must be included if type=[\'CEILING_MARKET\'|\'CEILING_LIMIT\']')
+    if (['CEILING_LIMIT','CEILING_MARKET'].indexOf(type) >=0 && quantity) throw new Error('Do not specify quantity if type=[\'CEILING_MARKET\'|\'CEILING_LIMIT\']')
+    if (['CEILING_LIMIT','LIMIT'].indexOf(type) >=0 && !limit) throw new Error('limit must be included if type=[\'LIMIT\'|\'CEILING_LIMIT\']')
+    if (['MARKET','CEILING_MARKET'].indexOf(type) >=0 && limit) throw new Error('Do not specify limit if type=[\'MARKET\'|\'CEILING_MARKET\']')
+    if (['MARKET','CEILING_MARKET'].indexOf(type) === -1 && !timeInForce) timeInForce = 'GOOD_TIL_CANCELLED'
     const requestBody = {marketSymbol,direction,type,quantity,ceiling,limit,timeInForce,clientOrderId,useAwards}
     const query = ''
     const results = await this.requestAuth('POST','/orders',query,requestBody)
