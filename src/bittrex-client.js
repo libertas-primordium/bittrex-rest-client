@@ -407,6 +407,21 @@ class BittrexClient {
   }
 
   /**
+   * @method tradingFees - Get trade fee for the given marketSymbol or get trade fees for each markets when marketSymbol is not provided.
+   * @param {String} marketSymbol - Optional. Example: 'BTC-USD'
+   * @returns {Promise} - {
+    "marketSymbol": "string",
+    "makerRate": "number (double)",
+    "takerRate": "number (double)",
+    }
+  */
+
+  async tradingFees(marketSymbol=''){
+    const results = this.requestAuth('GET',`/account/fees/trading/${marketSymbol}`)
+    return results
+  }
+
+  /**
    * @method getNewDepositAddress - Request a new deposit address for specified currencySymbol. Returns an address object.
    * @param {String} currencySymbol - Required. Example: 'BTC'
    * @returns {Promise} - {
